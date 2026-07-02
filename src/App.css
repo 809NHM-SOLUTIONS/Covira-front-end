@@ -1,0 +1,222 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: #f8f9fc;
+}
+
+/* NAVBAR */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 8%;
+  background: white;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  width: 45px;
+}
+
+.logo span {
+  font-size: 28px;
+  font-weight: 700;
+  color: #151b54;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 35px;
+}
+
+.nav-links li {
+  cursor: pointer;
+  font-weight: 500;
+  color: #444;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.login-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.signup-btn {
+  background: linear-gradient(135deg,#2563eb,#7c3aed);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* HERO */
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px 8%;
+  min-height: 80vh;
+}
+
+.hero-content {
+  max-width: 550px;
+}
+
+.hero-content h1 {
+  font-size: 70px;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.hero-content span {
+  color: #6d28d9;
+}
+
+.hero-content p {
+  margin-top: 25px;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.hero-buttons {
+  margin-top: 35px;
+  display: flex;
+  gap: 20px;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg,#2563eb,#7c3aed);
+  color: white;
+  border: none;
+  padding: 15px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 15px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.interview-card {
+  background: white;
+  width: 450px;
+  padding: 25px;
+  border-radius: 25px;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+}
+
+.interview-card h3 {
+  margin-bottom: 20px;
+}
+
+.video-placeholder {
+  height: 220px;
+  background: #eef2ff;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+}
+
+.question-box {
+  margin-top: 20px;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.timer {
+  margin-top: 15px;
+  font-weight: bold;
+  color: #ef4444;
+}
+
+/* FEATURES */
+
+.features {
+  padding: 100px 8%;
+}
+
+.features h2 {
+  text-align: center;
+  font-size: 45px;
+  margin-bottom: 50px;
+  color: #0f172a;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 25px;
+}
+
+.feature-card {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+}
+
+.feature-card h3 {
+  margin-bottom: 15px;
+  color: #2563eb;
+}
+
+.feature-card p {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+/* MOBILE */
+
+@media (max-width: 992px) {
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 50px;
+  }
+
+  .hero-content h1 {
+    font-size: 50px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-card {
+    width: 100%;
+  }
+
+  .nav-links {
+    display: none;
+  }
+}
