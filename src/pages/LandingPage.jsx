@@ -34,7 +34,11 @@ function LandingPage() {
                 </div>
 
                     <ul className={`nav-links ${menuOpen ? "active" : ""}`}>
-
+                        <li>
+                            <a href="#about" onClick={() => setMenuOpen(false)}>
+                                About
+                            </a>
+                        </li>
                     <li>
                         <a href="#features" onClick={() => setMenuOpen(false)}>
                             Features
@@ -49,11 +53,6 @@ function LandingPage() {
                     <li>
                         <a href="#pricing" onClick={() => setMenuOpen(false)}>
                             Pricing
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#about" onClick={() => setMenuOpen(false)}>
-                            About
                         </a>
                     </li>
                     <li>
@@ -232,6 +231,52 @@ function LandingPage() {
                 <p className="trusted-title">
                     Trusted by growing businesses and recruitment teams
                 </p>
+
+            </section>
+            {/* ABOUT */}
+            <section id="about" className="about-section">
+
+                <div className="about-image">
+
+                    <div className="about-card">
+
+                        <h2>Covira</h2>
+
+                        <p>
+                            Simplifying Recruitment Through Technology
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div className="about-content">
+
+                    <span>ABOUT US</span>
+
+                    <h2>
+                        Built To Transform
+                        Modern Recruitment
+                    </h2>
+
+                    <p>
+
+                        Covira is a modern video interview platform
+                        developed to help employers simplify recruitment,
+                        reduce scheduling delays and identify top talent
+                        through asynchronous video interviews.
+
+                    </p>
+
+                    <p>
+
+                        By combining secure interview links, timed responses,
+                        candidate management and an intuitive employer dashboard,
+                        Covira delivers a faster and more efficient hiring process.
+
+                    </p>
+
+                </div>
 
             </section>
             {/* FEATURES */}
@@ -585,52 +630,7 @@ function LandingPage() {
                 </div>
 
             </section>
-            {/* ABOUT */}
-            <section id="about" className="about-section">
 
-                <div className="about-image">
-
-                    <div className="about-card">
-
-                        <h2>Covira</h2>
-
-                        <p>
-                            Simplifying Recruitment Through Technology
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div className="about-content">
-
-                    <span>ABOUT US</span>
-
-                    <h2>
-                        Built To Transform
-                        Modern Recruitment
-                    </h2>
-
-                    <p>
-
-                        Covira is a modern video interview platform
-                        developed to help employers simplify recruitment,
-                        reduce scheduling delays and identify top talent
-                        through asynchronous video interviews.
-
-                    </p>
-
-                    <p>
-
-                        By combining secure interview links, timed responses,
-                        candidate management and an intuitive employer dashboard,
-                        Covira delivers a faster and more efficient hiring process.
-
-                    </p>
-
-                </div>
-
-           </section>
             {/* FAQ */}
             <section className="faq-section">
 

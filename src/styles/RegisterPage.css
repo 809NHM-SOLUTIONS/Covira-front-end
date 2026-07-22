@@ -335,3 +335,24 @@ form button:hover{
         gap: 10px;
     }
 }
+.password-match{
+    margin-top:10px;
+    margin-bottom:18px;
+    font-size:14px;
+    font-weight:600;
+}
+
+.password-match.success{
+    color:#16a34a;
+}
+
+.password-match.error{
+    color:#dc2626;
+}
+
+.register-card button:disabled{
+    background:#cbd5e1;
+    color:#ffffff;
+    cursor:not-allowed;
+    opacity:.7;
+}

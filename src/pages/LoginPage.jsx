@@ -1,6 +1,73 @@
 import "../styles/RegisterPage.css";
-import { Link } from "react-router-dom";
-function RegisterPage() {
+import Swal from "sweetalert2";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+function LoginPage() {
+
+    const navigate = useNavigate();
+
+    const [loginData, setLoginData] = useState({
+        email: "",
+        password: ""
+    });
+
+    const handleChange = (e) => {
+        setLoginData({
+            ...loginData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+
+            const response = await fetch("http://localhost:8080/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(loginData)
+            });
+
+            const message = await response.text();
+
+            if (message === "Login successful") {
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Welcome Back!",
+                    text: "Login successful.",
+                    confirmButtonColor: "#00A99D",
+                    background: "#ffffff",
+                    color: "#333",
+                    timer: 1800,
+                    showConfirmButton: false
+                }).then(() => {
+                    navigate("/dashboard");
+                });
+
+            } else {
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Login Failed",
+                    text: message,
+                    confirmButtonColor: "#00A99D"
+                });
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+            alert("Unable to connect to the server.");
+
+        }
+    };
+
     return (
         <div className="register-page">
 
@@ -21,13 +88,13 @@ function RegisterPage() {
                     </div>
 
                 </div>
+
                 <span className="tag">
                     VIDEO INTERVIEW PLATFORM
                 </span>
 
                 <h1>
-                    Welcome
-                    <span> Back</span>
+                    Welcome <span>Back</span>
                 </h1>
 
                 <p>
@@ -35,6 +102,7 @@ function RegisterPage() {
                     manage interviews and review
                     candidate submissions.
                 </p>
+
                 <div className="dashboard-preview">
 
                     <div className="preview-header">
@@ -49,7 +117,6 @@ function RegisterPage() {
 
                 </div>
 
-
             </div>
 
             <div className="register-right">
@@ -60,19 +127,25 @@ function RegisterPage() {
                         ← Back to Home
                     </Link>
 
-                    <h3>Sign in</h3>
+                    <h3>Sign In</h3>
 
-                    <form>
+                    <form onSubmit={handleSubmit}>
 
                         <input
                             type="email"
+                            name="email"
                             placeholder="Business Email"
+                            value={loginData.email}
+                            onChange={handleChange}
                             required
                         />
 
                         <input
                             type="password"
+                            name="password"
                             placeholder="Password"
+                            value={loginData.password}
+                            onChange={handleChange}
                             required
                         />
 
@@ -83,7 +156,7 @@ function RegisterPage() {
                                 Remember Me
                             </label>
 
-                           <Link to="/forgot-password">
+                            <Link to="/forgot-password">
                                 Forgot Password?
                             </Link>
 
@@ -108,4 +181,4 @@ function RegisterPage() {
     );
 }
 
-export default RegisterPage;
+export default LoginPage;
