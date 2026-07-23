@@ -1,18 +1,57 @@
 import "../styles/DashboardPage.css";
+import { useNavigate, NavLink } from "react-router-dom";
+import Swal from "sweetalert2";
+
 import {
     FaHome,
-    FaClipboardList,
-    FaUsers,
     FaVideo,
+    FaQuestionCircle,
+    FaUsers,
     FaChartBar,
     FaCog,
+    FaSignOutAlt,
     FaBell,
-    FaSearch,
-    FaPlus,
-    FaSignOutAlt
+    FaPlusCircle
 } from "react-icons/fa";
 
 function DashboardPage() {
+
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+
+        Swal.fire({
+            title: "Logout?",
+            text: "Are you sure you want to logout?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#00A99D",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Logout"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                localStorage.clear();
+                sessionStorage.clear();
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Logged Out",
+                    text: "You have been logged out successfully.",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+
+                    navigate("/login");
+
+                });
+
+            }
+
+        });
+
+    };
 
     return (
 
@@ -22,102 +61,96 @@ function DashboardPage() {
 
             <aside className="sidebar">
 
-                <div className="logo-section">
+                <div>
 
-                    <img
-                        src="/covira_tranperant.png"
-                        alt="Covira Logo"
-                        className="logo"
-                    />
+                    <div className="sidebar-brand">
 
-                    <h2>Covira</h2>
+                        <div className="brand-card">
 
-                    <p>Beyond Resumes</p>
+                            <div className="brand-logo">
 
-                </div>
+                                <img
+                                    src="/covira_tranperant.png"
+                                    alt="Covira Logo"
+                                />
 
-                <nav>
+                            </div>
 
-                    <ul>
+                            <div className="brand-text">
 
-                        <li className="active">
-                            <FaHome />
-                            Dashboard
-                        </li>
+                                <h2>Covira</h2>
 
-                        <li>
-                            <FaClipboardList />
-                            Interviews
-                        </li>
+                                <p>Beyond Resumes</p>
 
-                        <li>
-                            <FaVideo />
-                            Video Responses
-                        </li>
-
-                        <li>
-                            <FaUsers />
-                            Candidates
-                        </li>
-
-                        <li>
-                            <FaChartBar />
-                            Reports
-                        </li>
-
-                        <li>
-                            <FaCog />
-                            Settings
-                        </li>
-
-                    </ul>
-
-                </nav>
-
-                <button className="logout-btn">
-
-                    <FaSignOutAlt />
-
-                    Logout
-
-                </button>
-
-            </aside>
-
-            {/* Main Content */}
-
-            <main className="main-content">
-
-                {/* Header */}
-
-                <header className="topbar">
-
-                    <div>
-
-                        <h1>Dashboard</h1>
-
-                        <p>Welcome back to Covira.</p>
-
-                    </div>
-
-                    <div className="top-actions">
-
-                        <div className="search-box">
-
-                            <FaSearch />
-
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                            />
+                            </div>
 
                         </div>
 
-                        <button className="icon-btn">
+                    </div>
+
+                    <nav>
+
+                        <NavLink
+                            to="/dashboard"
+                            className={({ isActive }) => isActive ? "active" : ""}
+                        >
+                            <span>Dashboard</span>
+                        </NavLink>
+
+                        <NavLink to="/dashboard/interviews">
+                            <FaVideo className="menu-icon" />
+                            <span>Interviews</span>
+                        </NavLink>
+
+                        <NavLink to="/dashboard/questions">
+                            <FaQuestionCircle className="menu-icon" />
+                            <span>Questions</span>
+                        </NavLink>
+
+                        <NavLink to="/dashboard/candidates">
+                            <FaUsers className="menu-icon" />
+                            <span>Candidates</span>
+                        </NavLink>
+
+                        <NavLink to="/dashboard/analytics">
+                            <FaChartBar className="menu-icon" />
+                            <span>Analytics</span>
+                        </NavLink>
+
+                        <NavLink to="/dashboard/settings">
+                            <FaCog className="menu-icon" />
+                            <span>Settings</span>
+                        </NavLink>
+
+                    </nav>
+
+                </div>
+
+                <button
+                    className="logout-btn"
+                    onClick={handleLogout}
+                >
+                    <FaSignOutAlt className="menu-icon" />
+                    Logout
+                </button>
+
+            </aside>            {/* Main */}
+
+            <main className="dashboard-content">
+
+                {/* Header */}
+
+                <header className="dashboard-header">
+
+                    <div className="header-right">
+
+                        <div className="notification">
 
                             <FaBell />
 
-                        </button>
+                            <span className="notification-dot"></span>
+
+                        </div>
 
                         <div className="profile">
 
@@ -129,236 +162,124 @@ function DashboardPage() {
 
                                 <h4>Nomsa</h4>
 
-                                <span>Administrator</span>
+                                <span>Employer</span>
 
                             </div>
 
                         </div>
 
                     </div>
-
                 </header>
 
-                {/* Welcome Banner */}
+                {/* Statistics */}
 
-                <section className="welcome-banner">
+                <section className="stats">
 
-                    <div>
+                    <div className="card">
 
-                        <h2>Welcome back 👋</h2>
+                        <h3>Total Interviews</h3>
+
+                        <h2>0</h2>
+
+                        <span>No interviews created</span>
+
+                    </div>
+
+                    <div className="card">
+
+                        <h3>Candidates</h3>
+
+                        <h2>0</h2>
+
+                        <span>No candidates yet</span>
+
+                    </div>
+
+                    <div className="card">
+
+                        <h3>Completed</h3>
+
+                        <h2>0</h2>
+
+                        <span>Completed interviews</span>
+
+                    </div>
+
+                    <div className="card">
+
+                        <h3>Pending</h3>
+
+                        <h2>0</h2>
+
+                        <span>Awaiting responses</span>
+
+                    </div>
+
+                </section>
+
+                {/* Quick Actions */}
+
+                <section className="quick-actions">
+
+                    <h2>Quick Actions</h2>
+
+                    <div className="actions-grid">
+
+                        <div className="action-card">
+
+                            <h3>
+                                <FaPlusCircle className="action-icon" />
+                                Create Interview
+                            </h3>
+
+                            <p>Create a new interview assessment.</p>
+
+                        </div>
+
+                        <div className="action-card">
+
+                            <h3>
+                                <FaQuestionCircle className="action-icon" />
+                                Manage Questions
+                            </h3>
+
+                            <p>Create and organize interview questions.</p>
+
+                        </div>
+
+                        <div className="action-card">
+
+                            <h3>
+                                <FaUsers className="action-icon" />
+                                View Candidates
+                            </h3>
+
+                            <p>Review submitted interview responses.</p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                {/* Recent Activity */}
+
+                <section className="activity">
+
+                    <h2>Recent Activity</h2>
+
+                    <div className="activity-box">
+
+                        <h3>No activity yet</h3>
 
                         <p>
-
-                            Create interviews, review candidates,
-                            and make smarter hiring decisions.
-
+                            Once you create interviews and invite candidates,
+                            your recent activity will appear here.
                         </p>
 
                     </div>
 
-                    <button className="create-btn">
-
-                        <FaPlus />
-
-                        Create Interview
-
-                    </button>
-
                 </section>
-
-                {/* Statistics */}
-
-                <section className="stats-grid">
-
-                    <div className="stat-card">
-                        <span>Total Interviews</span>
-                        <h2>24</h2>
-                        <p>+4 this week</p>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>Candidates</span>
-                        <h2>86</h2>
-                        <p>18 new today</p>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>Completed</span>
-                        <h2>56</h2>
-                        <p>92% completion</p>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>Success Rate</span>
-                        <h2>97%</h2>
-                        <p>Excellent</p>
-                    </div>
-
-                </section>
-
-                {/* Dashboard Content */}
-
-                <div className="dashboard-grid">
-
-                    {/* Recent Interviews */}
-
-                    <div className="dashboard-card interviews-card">
-
-                        <div className="card-header">
-
-                            <h3>Recent Interviews</h3>
-
-                            <button>View All</button>
-
-                        </div>
-
-                        <table>
-
-                            <thead>
-
-                            <tr>
-
-                                <th>Position</th>
-
-                                <th>Status</th>
-
-                                <th>Candidates</th>
-
-                                <th>Action</th>
-
-                            </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                            <tr>
-
-                                <td>Software Developer</td>
-
-                                <td><span className="badge active">Active</span></td>
-
-                                <td>18</td>
-
-                                <td><button className="table-btn">View</button></td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>Frontend Developer</td>
-
-                                <td><span className="badge completed">Completed</span></td>
-
-                                <td>10</td>
-
-                                <td><button className="table-btn">View</button></td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>HR Manager</td>
-
-                                <td><span className="badge pending">Pending</span></td>
-
-                                <td>7</td>
-
-                                <td><button className="table-btn">View</button></td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>UI/UX Designer</td>
-
-                                <td><span className="badge active">Active</span></td>
-
-                                <td>14</td>
-
-                                <td><button className="table-btn">View</button></td>
-
-                            </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                    {/* Right Side */}
-
-                    <div className="right-panel">
-
-                        {/* Quick Actions */}
-
-                        <div className="dashboard-card">
-
-                            <h3>Quick Actions</h3>
-
-                            <button className="quick-btn">+ Create Interview</button>
-
-                            <button className="quick-btn">+ Add Questions</button>
-
-                            <button className="quick-btn">Invite Candidate</button>
-
-                            <button className="quick-btn">Generate Link</button>
-
-                        </div>
-
-                        {/* Recent Candidates */}
-
-                        <div className="dashboard-card">
-
-                            <h3>Recent Candidates</h3>
-
-                            <div className="candidate">
-
-                                <div>
-
-                                    <strong>Sarah Johnson</strong>
-
-                                    <p>Software Developer</p>
-
-                                </div>
-
-                                <span className="badge completed">Completed</span>
-
-                            </div>
-
-                            <div className="candidate">
-
-                                <div>
-
-                                    <strong>James Smith</strong>
-
-                                    <p>Frontend Developer</p>
-
-                                </div>
-
-                                <span className="badge active">In Progress</span>
-
-                            </div>
-
-                            <div className="candidate">
-
-                                <div>
-
-                                    <strong>Emily Brown</strong>
-
-                                    <p>HR Manager</p>
-
-                                </div>
-
-                                <span className="badge pending">Pending</span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
 
             </main>
 

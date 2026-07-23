@@ -1,124 +1,202 @@
-/* ===========================
-   GENERAL
-=========================== */
+/* ==========================================
+   Covira Dashboard
+========================================== */
 
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:"Segoe UI",sans-serif;
+    font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
 }
 
 body{
-    background:#f4f7fb;
+    background:#F4F7FC;
+    color:#333;
 }
+
+/* ==========================================
+   Layout
+========================================== */
 
 .dashboard{
     display:flex;
     min-height:100vh;
+    background:#F4F7FC;
 }
 
-/* ===========================
-   SIDEBAR
-=========================== */
+/* ==========================================
+   Sidebar
+========================================== */
 
 .sidebar{
 
     width:270px;
-    background:#142B43;
-    color:white;
+    min-height:100vh;
+
+    position:fixed;
+    left:0;
+    top:0;
+
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    padding:30px 20px;
-    position:fixed;
-    height:100vh;
 
-}
-
-.logo-section{
-
-    text-align:center;
-    margin-bottom:40px;
-}
-.logo{
-    width:110px;
-    margin-bottom:15px;
-}
-.logo-section h2{
-
-    font-size:28px;
-    font-weight:700;
-
-}
-
-.logo-section p{
-
-    color:#b6c7d7;
-    margin-top:5px;
-}
-
-.sidebar ul{
-
-    list-style:none;
-
-}
-
-.sidebar li{
-
-    display:flex;
-    align-items:center;
-    gap:15px;
-
-    padding:15px;
-
-    border-radius:12px;
-
-    margin-bottom:10px;
-
-    cursor:pointer;
-
-    transition:.3s;
-
-    font-size:16px;
-
-}
-
-.sidebar li:hover{
-
-    background:#6D28D9;
-
-}
-
-.active{
-
-    background:#6D28D9;
-
-}
-
-.logout-btn{
-
-    border:none;
-
-    background:#6D28D9;
+    padding:30px 22px;
 
     color:white;
 
-    padding:15px;
+    overflow:hidden;
 
-    border-radius:12px;
+    background:
+            radial-gradient(circle at top right,
+            rgba(255,255,255,.08) 0,
+            rgba(255,255,255,.08) 170px,
+            transparent 171px),
 
-    cursor:pointer;
+            radial-gradient(circle at bottom left,
+            rgba(255,255,255,.06) 0,
+            rgba(255,255,255,.06) 180px,
+            transparent 181px),
+
+            linear-gradient(
+                    135deg,
+                    #17276D 0%,
+                    #2854D8 55%,
+                    #6D35F8 100%
+            );
+    box-shadow:8px 0 30px rgba(18,33,97,.15);
+}
+
+/* ===============================
+   Sidebar Brand
+================================ */
+
+.sidebar-brand{
+
+    margin-bottom:40px;
+
+}
+
+.brand-card{
+
+    display:flex;
+    align-items:center;
+    gap:16px;
+
+    padding:16px;
+
+    border-radius:22px;
+
+    background:rgba(255,255,255,.12);
+
+    backdrop-filter:blur(16px);
+
+    border:1px solid rgba(255,255,255,.15);
+
+}
+
+.brand-logo{
+
+    width:70px;
+    height:70px;
+
+    background:white;
+
+    border-radius:18px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    flex-shrink:0;
+
+}
+
+.brand-logo img{
+
+    width:48px;
+
+}
+
+.brand-text h2{
+
+    color:white;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    margin-bottom:4px;
+
+}
+
+.brand-text p{
+    color:rgba(255,255,255,.75);
+    font-size:13px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+}
+
+.sidebar nav{
+
+    margin-top:35px;
+
+}
+
+.sidebar nav a{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    text-decoration:none;
+    color:#D9E2FF;
+    padding:15px 18px;
+    border-radius:14px;
+    transition:.25s;
+    font-size:15px;
+    font-weight:600;
+}
+
+.sidebar nav a:hover{
+    background:#243B8F;
+    color:#fff;
+    transform:translateX(5px);
+}
+
+.sidebar nav a.active{
+    background:#243B8F;
+    color:#fff;
+    box-shadow:0 12px 25px rgba(255,255,255,.15);
+}
+
+/* ==========================================
+   Logout Button
+========================================== */
+.logout-btn{
+
+    width:100%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+
+    padding:14px;
+
+    margin-top:25px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.15);
+
+    color:#fff;
 
     font-size:16px;
 
-    display:flex;
+    font-weight:600;
 
-    justify-content:center;
-
-    align-items:center;
-
-    gap:10px;
+    cursor:pointer;
 
     transition:.3s;
 
@@ -126,526 +204,940 @@ body{
 
 .logout-btn:hover{
 
-    background:#2563EB;
-    transform:translateY(-3px);
+    background:#00A99D;
+
+    transform:translateY(-2px);
 
 }
 
-/* ===========================
-   MAIN CONTENT
-=========================== */
+/* ==========================================
+   Main Content
+========================================== */
 
-.main-content{
-
+.dashboard-content{
     flex:1;
     margin-left:270px;
     padding:35px;
-
 }
 
-/* ===========================
-   TOP BAR
-=========================== */
-
-.topbar{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:30px;
-
-}
-
-.topbar h1{
-
-    color:#163047;
-
-    font-size:34px;
-
-}
-
-.topbar p{
-
-    color:#777;
-
-    margin-top:5px;
-
-}
-
-.top-actions{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:20px;
-
-}
-
-.search-box{
-
-    display:flex;
-
-    align-items:center;
-
-    background:white;
-
-    padding:12px 18px;
-
-    border-radius:50px;
-
-    box-shadow:0 5px 18px rgba(0,0,0,.08);
-
-}
-
-.search-box input{
-
-    border:none;
-
-    outline:none;
-
-    margin-left:10px;
-
-    width:220px;
-
-}
-
-.icon-btn{
-
-    width:50px;
-
-    height:50px;
-
-    border:none;
-
-    border-radius:50%;
-
-    background:white;
-
-    box-shadow:0 5px 18px rgba(0,0,0,.08);
-
-    cursor:pointer;
-
-    transition:.3s;
-
-}
-
-.icon-btn:hover{
-
-    background:#00A99D;
-
-    color:white;
-
-}
-
-.profile{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:15px;
-
-}
-
-.avatar{
-
-    width:50px;
-
-    height:50px;
-
-    border-radius:50%;
-
-    background:#00A99D;
-
-    color:white;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-weight:bold;
-
-    font-size:20px;
-
-}
-
-/* ===========================
-   WELCOME BANNER
-=========================== */
-
-.welcome-banner{
-
-    background:linear-gradient(135deg,#163047,#00A99D);
-
-    color:white;
-
-    padding:40px;
-
-    border-radius:20px;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:35px;
-
-    box-shadow:0 20px 45px rgba(0,0,0,.12);
-
-}
-
-.welcome-banner h2{
-
-    font-size:34px;
-
-    margin-bottom:10px;
-
-}
-
-.welcome-banner p{
-
-    font-size:17px;
-
-    color:#edf7f6;
-
-}
-
-.create-btn{
-
-    background:white;
-
-    color:#163047;
-
-    border:none;
-
-    padding:15px 30px;
-
-    border-radius:12px;
-
-    font-size:16px;
-
-    font-weight:600;
-
-    cursor:pointer;
-
-    display:flex;
-
-    align-items:center;
-
-    gap:10px;
-
-    transition:.3s;
-
-}
-
-.create-btn:hover{
-
-    transform:translateY(-4px);
-
-    background:#f3f3f3;
-
-}
-/* ===========================
-   STATISTICS
-=========================== */
-
-.stats-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:25px;
-    margin-bottom:35px;
-}
-
-.stat-card{
+/* ==========================================
+   Header
+========================================== */
+
+.dashboard-header{
     background:#fff;
     border-radius:18px;
-    padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,.08);
-    transition:.35s;
-    position:relative;
-    overflow:hidden;
-}
-
-.stat-card::before{
-    content:"";
-    position:absolute;
-    left:0;
-    top:0;
-    width:6px;
-    height:100%;
-    background:#00A99D;
-}
-
-.stat-card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 20px 45px rgba(0,0,0,.15);
-}
-
-.stat-card span{
-    color:#777;
-    font-size:14px;
-}
-
-.stat-card h2{
-    margin:18px 0;
-    font-size:40px;
-    color:#163047;
-}
-
-.stat-card p{
-    color:#00A99D;
-    font-weight:600;
-}
-
-/* ===========================
-   GRID
-=========================== */
-
-.dashboard-grid{
-    display:grid;
-    grid-template-columns:2fr 1fr;
-    gap:25px;
-}
-
-.dashboard-card{
-    background:white;
-    border-radius:20px;
-    padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-
-.dashboard-card h3{
-    color:#163047;
-    margin-bottom:20px;
-}
-
-/* ===========================
-   CARD HEADER
-=========================== */
-
-.card-header{
+    padding:25px 30px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+    margin-bottom:35px;
 }
 
-.card-header button{
-    border:none;
-    background:#00A99D;
-    color:white;
-    padding:10px 20px;
-    border-radius:10px;
-    cursor:pointer;
-    transition:.3s;
+.dashboard-header h1{
+    color:#243B8F;
+    font-size:32px;
+    margin-bottom:8px;
 }
 
-.card-header button:hover{
-    background:#2563EB;
-}
-
-/* ===========================
-   TABLE
-=========================== */
-
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-thead{
-    background:#f5f7fb;
-}
-
-th{
-    text-align:left;
-    padding:15px;
-    color:#163047;
-    font-weight:600;
-}
-
-td{
-    padding:18px 15px;
-    border-bottom:1px solid #eee;
-}
-
-tbody tr{
-    transition:.3s;
-}
-
-tbody tr:hover{
-    background:#f9fcfc;
-}
-
-/* ===========================
-   BADGES
-=========================== */
-
-.badge{
-    padding:7px 15px;
-    border-radius:30px;
-    color:white;
-    font-size:13px;
-    font-weight:600;
-}
-
-.active{
-    background:#00A99D;
-}
-
-.completed{
-    background:#2ecc71;
-}
-
-.pending{
-    background:#f39c12;
-}
-
-/* ===========================
-   TABLE BUTTON
-=========================== */
-
-.table-btn{
-    border:none;
-    background:#163047;
-    color:white;
-    padding:9px 18px;
-    border-radius:8px;
-    cursor:pointer;
-    transition:.3s;
-}
-
-.table-btn:hover{
-    background:#00A99D;
-}
-
-/* ===========================
-   QUICK ACTIONS
-=========================== */
-
-.quick-btn{
-    width:100%;
-    margin-bottom:15px;
-    border:none;
-    padding:15px;
-    background:#163047;
-    color:white;
-    border-radius:12px;
-    cursor:pointer;
-    transition:.3s;
+.dashboard-header p{
+    color:#666;
     font-size:15px;
 }
 
-.quick-btn:hover{
-    background:#2563EB;
-    transform:translateY(-3px);
-}
+/* ==========================================
+   Profile
+========================================== */
 
-/* ===========================
-   CANDIDATES
-=========================== */
-
-.candidate{
+.profile{
     display:flex;
-    justify-content:space-between;
     align-items:center;
-    padding:15px 0;
-    border-bottom:1px solid #eee;
+    gap:15px;
 }
 
-.candidate:last-child{
-    border-bottom:none;
+.avatar{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#243B8F,#00A99D);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    font-weight:bold;
 }
 
-.candidate strong{
-    color:#163047;
+.profile h4{
+    color:#243B8F;
+    margin-bottom:3px;
 }
 
-.candidate p{
+.profile span{
     color:#777;
-    margin-top:4px;
     font-size:14px;
 }
 
-/* ===========================
-   RESPONSIVE
-=========================== */
+/* ==========================================
+   Section Titles
+========================================== */
 
-@media(max-width:1200px){
-
-    .stats-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .dashboard-grid{
-        grid-template-columns:1fr;
-    }
-
+.quick-actions h2,
+.activity h2{
+    color:#243B8F;
+    margin-bottom:18px;
+    font-size:24px;
 }
 
-@media(max-width:900px){
+/* ==========================================
+   Smooth Animation
+========================================== */
+
+.card,
+.action-card,
+.activity-box,
+.dashboard-header{
+    transition:.3s ease;
+}
+
+.card:hover,
+.action-card:hover,
+.activity-box:hover,
+.dashboard-header:hover{
+    transform:translateY(-4px);
+}
+
+/* ==========================================
+   Tablet
+========================================== */
+
+@media(max-width:992px){
 
     .sidebar{
-        width:90px;
-        padding:20px 10px;
+        width:220px;
     }
 
-    .sidebar h2,
-    .sidebar p,
-    .sidebar li{
-        font-size:0;
+    .dashboard-content{
+        margin-left:220px;
+        padding:25px;
     }
 
-    .sidebar svg{
-        font-size:22px;
-    }
-
-    .logo{
-
-        width:180px;
-        height:auto;
-        display:block;
-        margin:0 auto 20px;
-
-        filter:
-                drop-shadow(0 10px 25px rgba(37,99,235,.35));
-
-    }
-
-
-    .main-content{
-        margin-left:90px;
-    }
-
-}
-
-@media(max-width:768px){
-
-    .topbar{
+    .dashboard-header{
         flex-direction:column;
         align-items:flex-start;
         gap:20px;
     }
 
-    .welcome-banner{
+}
+
+/* ==========================================
+   Mobile Foundation
+========================================== */
+
+@media(max-width:768px){
+
+    .dashboard{
         flex-direction:column;
-        text-align:center;
+    }
+
+    .sidebar{
+        position:relative;
+        width:100%;
+        height:auto;
+        padding:20px;
+    }
+
+    .sidebar-logo img{
+        width:70px;
+    }
+
+    .sidebar nav{
+        margin-top:20px;
+    }
+
+    .dashboard-content{
+        margin-left:0;
+        padding:20px;
+    }
+
+    .dashboard-header{
+        flex-direction:column;
+        align-items:flex-start;
         gap:20px;
+        padding:20px;
     }
 
-    .stats-grid{
+    .dashboard-header h1{
+        font-size:26px;
+    }
+
+    .profile{
+        width:100%;
+    }
+
+}
+/* ==========================================
+   Statistics Cards
+========================================== */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:25px;
+    margin-bottom:40px;
+}
+
+.card{
+    background:#fff;
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+}
+
+.card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:5px;
+    background:linear-gradient(90deg,#243B8F,#3E4FCB,#00A99D);
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 20px 40px rgba(36,59,143,.15);
+}
+
+.card h3{
+    font-size:16px;
+    color:#666;
+    margin-bottom:20px;
+    font-weight:600;
+}
+
+.card h2{
+    font-size:42px;
+    color:#243B8F;
+    margin-bottom:10px;
+}
+
+.card span{
+    font-size:14px;
+    color:#999;
+}
+
+/* ==========================================
+   Quick Actions
+========================================== */
+
+.quick-actions{
+    margin-bottom:40px;
+}
+
+.actions-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:25px;
+}
+
+.action-card{
+    background:#fff;
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
+    cursor:pointer;
+    transition:.3s;
+    border:2px solid transparent;
+}
+
+.action-card:hover{
+    border-color:#00A99D;
+    transform:translateY(-8px);
+    box-shadow:0 20px 35px rgba(0,169,157,.15);
+}
+
+.action-card h3{
+    color:#243B8F;
+    font-size:22px;
+    margin-bottom:15px;
+}
+
+.action-card p{
+    color:#777;
+    line-height:1.7;
+    font-size:15px;
+}
+
+/* ==========================================
+   Recent Activity
+========================================== */
+
+.activity{
+    margin-bottom:40px;
+}
+
+.activity-box{
+    background:#fff;
+    border-radius:18px;
+    padding:35px;
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+.activity-box h3{
+    color:#243B8F;
+    margin-bottom:12px;
+    font-size:24px;
+}
+
+.activity-box p{
+    color:#777;
+    line-height:1.8;
+    font-size:15px;
+}
+
+/* ==========================================
+   Hover Glow
+========================================== */
+
+.card,
+.action-card,
+.activity-box{
+    transition:all .35s ease;
+}
+
+.card:hover,
+.action-card:hover,
+.activity-box:hover{
+    box-shadow:0 20px 45px rgba(36,59,143,.12);
+}
+
+/* ==========================================
+   Fade Animation
+========================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+        transform:translateY(30px);
+
+    }
+
+    to{
+
+        opacity:1;
+        transform:translateY(0);
+
+    }
+
+}
+
+.dashboard-header{
+    animation:fadeUp .6s ease;
+}
+
+.stats .card:nth-child(1){
+    animation:fadeUp .6s ease;
+}
+
+.stats .card:nth-child(2){
+    animation:fadeUp .8s ease;
+}
+
+.stats .card:nth-child(3){
+    animation:fadeUp 1s ease;
+}
+
+.stats .card:nth-child(4){
+    animation:fadeUp 1.2s ease;
+}
+
+.action-card:nth-child(1){
+    animation:fadeUp 1.3s ease;
+}
+
+.action-card:nth-child(2){
+    animation:fadeUp 1.5s ease;
+}
+
+.action-card:nth-child(3){
+    animation:fadeUp 1.7s ease;
+}
+
+.activity-box{
+    animation:fadeUp 1.9s ease;
+}
+
+/* ==========================================
+   Scrollbar
+========================================== */
+
+::-webkit-scrollbar{
+    width:10px;
+}
+
+::-webkit-scrollbar-track{
+    background:#EDF2F7;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#243B8F;
+    border-radius:20px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+    background:#00A99D;
+}
+
+/* ==========================================
+   Tablet View
+========================================== */
+
+@media(max-width:992px){
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .actions-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+/* ==========================================
+   Mobile View
+========================================== */
+
+@media(max-width:768px){
+
+    .stats{
         grid-template-columns:1fr;
+        gap:18px;
     }
 
-    .search-box input{
-        width:130px;
+    .actions-grid{
+        grid-template-columns:1fr;
+        gap:18px;
     }
+
+    .card{
+
+        padding:22px;
+
+    }
+
+    .card h2{
+
+        font-size:34px;
+
+    }
+
+    .action-card{
+
+        padding:22px;
+
+    }
+
+    .action-card h3{
+
+        font-size:20px;
+
+    }
+
+    .activity-box{
+
+        padding:25px;
+
+    }
+
+    .activity-box h3{
+
+        font-size:22px;
+
+    }
+
+}
+/* ==========================================
+   Premium Dashboard Finishing Touches
+========================================== */
+
+/* Sticky Header */
+
+.dashboard-header{
+    position:sticky;
+    top:20px;
+    z-index:100;
+}
+
+/* ==========================================
+   Sidebar Scroll
+========================================== */
+
+.sidebar{
+    overflow-y:auto;
+}
+
+.sidebar::-webkit-scrollbar{
+    width:6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.3);
+    border-radius:10px;
+}
+
+/* ==========================================
+   Navigation Icons
+========================================== */
+
+.sidebar nav a{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+}
+
+/* ==========================================
+   Smooth Button Effects
+========================================== */
+
+button{
+
+    transition:.3s ease;
+
+}
+
+button:active{
+
+    transform:scale(.97);
+
+}
+
+/* ==========================================
+   Input Styling
+   (Future forms)
+========================================== */
+
+input,
+select,
+textarea{
+
+    width:100%;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:12px 14px;
+    outline:none;
+    transition:.3s;
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+    border-color:#00A99D;
+    box-shadow:0 0 0 4px rgba(0,169,157,.15);
+
+}
+
+/* ==========================================
+   Future Tables
+========================================== */
+
+table{
+
+    width:100%;
+    border-collapse:collapse;
+
+}
+
+table th{
+
+    background:#243B8F;
+    color:#fff;
+    padding:15px;
+    text-align:left;
+
+}
+
+table td{
+
+    padding:15px;
+    border-bottom:1px solid #eee;
+
+}
+
+table tr:hover{
+
+    background:#F7FAFC;
+
+}
+
+/* ==========================================
+   Card Animation
+========================================== */
+
+.card,
+.action-card{
+
+    animation-duration:.5s;
+
+}
+
+.card:hover h2{
+
+    color:#00A99D;
+
+}
+
+/* ==========================================
+   Mobile Navigation
+========================================== */
+
+.mobile-menu{
+
+    display:none;
+
+}
+
+/* ==========================================
+   Tablet
+========================================== */
+
+@media (max-width:992px){
+
+    .dashboard-content{
+
+        padding:25px;
+
+    }
+
+    .dashboard-header{
+
+        gap:15px;
+
+    }
+
+    .profile{
+
+        align-self:flex-start;
+
+    }
+
+}
+
+/* ==========================================
+   Mobile Phones
+========================================== */
+
+@media (max-width:768px){
+
+    .sidebar{
+
+        position:relative;
+        width:100%;
+        height:auto;
+        padding:18px;
+
+    }
+
+    .sidebar-logo{
+
+        margin-bottom:20px;
+
+    }
+
+    .sidebar nav{
+
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+
+    }
+
+    .sidebar nav a{
+
+        justify-content:center;
+        font-size:14px;
+        padding:12px;
+
+    }
+
+    .logout-btn{
+
+        margin-top:20px;
+
+    }
+
+    .dashboard-content{
+
+        margin-left:0;
+        padding:18px;
+
+    }
+
+    .dashboard-header{
+
+        border-radius:15px;
+        padding:20px;
+
+    }
+
+    .dashboard-header h1{
+
+        font-size:24px;
+
+    }
+
+    .dashboard-header p{
+
+        font-size:14px;
+
+    }
+
+    .profile{
+
+        width:100%;
+        justify-content:flex-start;
+
+    }
+
+    .avatar{
+
+        width:50px;
+        height:50px;
+        font-size:20px;
+
+    }
+
+    .quick-actions h2,
+    .activity h2{
+
+        font-size:22px;
+
+    }
+
+}
+
+/* ==========================================
+   Small Phones
+========================================== */
+
+@media (max-width:480px){
+
+    .dashboard-content{
+
+        padding:15px;
+
+    }
+
+    .dashboard-header{
+
+        padding:18px;
+
+    }
+
+    .dashboard-header h1{
+
+        font-size:21px;
+
+    }
+
+    .sidebar nav{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .sidebar nav a{
+
+        justify-content:flex-start;
+
+    }
+
+    .card{
+
+        padding:20px;
+
+    }
+
+    .card h2{
+
+        font-size:30px;
+
+    }
+
+    .card h3{
+
+        font-size:15px;
+
+    }
+
+    .action-card{
+
+        padding:20px;
+
+    }
+
+    .action-card h3{
+
+        font-size:18px;
+
+    }
+
+    .activity-box{
+
+        padding:20px;
+
+    }
+
+    .activity-box h3{
+
+        font-size:20px;
+
+    }
+
+    .logout-btn{
+
+        font-size:15px;
+
+    }
+
+}
+
+/* ==========================================
+   Large Screens
+========================================== */
+
+@media (min-width:1600px){
+
+    .dashboard-content{
+
+        max-width:1500px;
+        margin-left:270px;
+        margin-right:auto;
+
+    }
+
+}
+
+/* ==========================================
+   Accessibility
+========================================== */
+
+button:focus,
+a:focus{
+
+    outline:3px solid rgba(0,169,157,.35);
+
+}
+
+/* ==========================================
+   Selection Color
+========================================== */
+
+::selection{
+
+    background:#00A99D;
+    color:#fff;
+
+}
+
+/* ==========================================
+   Footer Space
+========================================== */
+
+.activity{
+
+    padding-bottom:40px;
+
+}
+.menu-icon{
+    font-size:24px;
+    color:ghostwhite;
+    min-width:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.3s ease;
+}
+.header-right{
+
+    display:flex;
+    align-items:center;
+    gap:25px;
+
+}
+.notification{
+
+    width:48px;
+    height:48px;
+
+    border-radius:50%;
+
+    background:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    position:relative;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.notification:hover{
+
+    transform:translateY(-3px);
+
+}
+
+.notification svg{
+
+    font-size:20px;
+    color:#243B8F;
+
+}
+.notification-dot{
+
+    width:10px;
+    height:10px;
+
+    background:#ff3b3b;
+
+    border-radius:50%;
+
+    position:absolute;
+
+    top:12px;
+    right:12px;
+
+}
+.action-card h3{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+}
+
+.action-icon{
+
+    color:#6D35F8;
+
+    font-size:24px;
 
 }

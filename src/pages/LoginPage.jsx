@@ -34,12 +34,12 @@ function LoginPage() {
 
             const message = await response.text();
 
-            if (message === "Login successful") {
+            if (response.ok) {
 
                 Swal.fire({
                     icon: "success",
                     title: "Welcome Back!",
-                    text: "Login successful.",
+                    text: message,
                     confirmButtonColor: "#00A99D",
                     background: "#ffffff",
                     color: "#333",
@@ -63,12 +63,19 @@ function LoginPage() {
         } catch (error) {
 
             console.error(error);
-            alert("Unable to connect to the server.");
+
+            Swal.fire({
+                icon: "error",
+                title: "Connection Error",
+                text: "Unable to connect to the server.",
+                confirmButtonColor: "#00A99D"
+            });
 
         }
     };
 
     return (
+
         <div className="register-page">
 
             <div className="register-left">
@@ -152,8 +159,11 @@ function LoginPage() {
                         <div className="login-options">
 
                             <label>
+
                                 <input type="checkbox" />
+
                                 Remember Me
+
                             </label>
 
                             <Link to="/forgot-password">
@@ -178,7 +188,9 @@ function LoginPage() {
             </div>
 
         </div>
+
     );
+
 }
 
 export default LoginPage;

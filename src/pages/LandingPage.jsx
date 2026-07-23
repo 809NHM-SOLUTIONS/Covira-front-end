@@ -1,6 +1,14 @@
 import "../styles/LandingPage.css";
 import { useState, useEffect } from "react";
 import {Link, useNavigate} from "react-router-dom";
+import {
+    HiOutlineVideoCamera,
+    HiOutlineLink,
+    HiOutlineSpeakerWave,
+    HiOutlineClock,
+    HiOutlineChartBar,
+    HiOutlineLockClosed
+} from "react-icons/hi2";
 function LandingPage() {
 
     const navigate = useNavigate();
@@ -120,10 +128,6 @@ function LandingPage() {
 
                         <button className="primary-btn" onClick={() => navigate("/register")}>
                             Get Started Free
-                        </button>
-
-                        <button className="secondary-btn">
-                            Book Demo
                         </button>
 
                     </div>
@@ -304,7 +308,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            🎥
+                            <HiOutlineVideoCamera />
                         </div>
 
                         <h3>Video Interviews</h3>
@@ -319,7 +323,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            🔗
+                            <HiOutlineLink />
                         </div>
 
                         <h3>Secure Interview Links</h3>
@@ -334,7 +338,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            🔊
+                            <HiOutlineSpeakerWave />
                         </div>
 
                         <h3>Question Read Aloud</h3>
@@ -349,7 +353,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            ⏱
+                            <HiOutlineClock />
                         </div>
 
                         <h3>Response Timer</h3>
@@ -364,7 +368,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            📊
+                            <HiOutlineChartBar />
                         </div>
 
                         <h3>Interview Analytics</h3>
@@ -379,7 +383,7 @@ function LandingPage() {
                     <div className="feature-card">
 
                         <div className="feature-icon">
-                            🔒
+                            <HiOutlineLockClosed />
                         </div>
 
                         <h3>Secure Storage</h3>
