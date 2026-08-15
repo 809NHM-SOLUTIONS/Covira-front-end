@@ -1,0 +1,334 @@
+.employer-live-page {
+  min-height: 100vh;
+  padding: 28px;
+  background: #f4f7fb;
+  box-sizing: border-box;
+}
+
+.employer-live-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.employer-live-badge {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #e5faf7;
+  color: #008f86;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.employer-live-header h1 {
+  margin: 12px 0 7px;
+  color: #10233f;
+  font-size: 32px;
+}
+
+.employer-live-header p {
+  margin: 0;
+  color: #687386;
+}
+
+.meeting-status-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.meeting-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: #e8faf2;
+  color: #08764f;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.meeting-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #13a36f;
+}
+
+.participant-count {
+  color: #697386;
+  font-size: 13px;
+}
+
+.employer-interview-information {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.employer-interview-information article {
+  padding: 17px;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.employer-interview-information span {
+  display: block;
+  margin-bottom: 6px;
+  color: #7a8496;
+  font-size: 13px;
+}
+
+.employer-interview-information strong {
+  color: #14213d;
+}
+
+.employer-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(340px, 0.8fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.employer-video-panel {
+  overflow: hidden;
+  border-radius: 18px;
+  background: #111827;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.employer-assessment-panel {
+  padding: 22px;
+  border: 1px solid #e1e7ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.assessment-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e6eaf0;
+}
+
+.assessment-heading span {
+  color: #008f86;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.assessment-heading h2 {
+  margin: 7px 0 0;
+  color: #14213d;
+  font-size: 22px;
+}
+
+.overall-score {
+  display: flex;
+  min-width: 72px;
+  height: 72px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: #e9faf7;
+}
+
+.overall-score strong {
+  color: #008f86;
+  font-size: 21px;
+}
+
+.overall-score span {
+  margin-top: 3px;
+  color: #657084;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.notes-section,
+.assessment-section,
+.recommendation-section {
+  padding: 20px 0;
+  border-bottom: 1px solid #e6eaf0;
+}
+
+.notes-section label,
+.assessment-section h3,
+.recommendation-section h3 {
+  display: block;
+  margin: 0;
+  color: #16213e;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.notes-section p,
+.assessment-section p,
+.recommendation-section p {
+  margin: 6px 0 12px;
+  color: #707b8f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notes-section textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 13px;
+  border: 1px solid #cfd7e3;
+  border-radius: 11px;
+  outline: none;
+  font: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.notes-section textarea:focus {
+  border-color: #00a99d;
+  box-shadow: 0 0 0 4px rgba(0, 169, 157, 0.11);
+}
+
+.notes-character-count {
+  display: block;
+  margin-top: 6px;
+  color: #8a93a3;
+  font-size: 11px;
+  text-align: right;
+}
+
+.assessment-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.assessment-section-heading strong {
+  color: #008f86;
+}
+
+.rating-buttons {
+  display: flex;
+  gap: 7px;
+}
+
+.rating-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #d1d7df;
+  font-size: 29px;
+  cursor: pointer;
+}
+
+.rating-button-active {
+  color: #f0a500;
+}
+
+.recommendation-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.recommendation-button {
+  min-height: 42px;
+  border: 1px solid #d4dbe5;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #4f5b70;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recommendation-button-active {
+  border-color: #00a99d;
+  background: #e7faf7;
+  color: #008f86;
+}
+
+.assessment-save-message {
+  min-height: 22px;
+  padding-top: 13px;
+  color: #08764f;
+  font-size: 13px;
+  text-align: center;
+}
+
+.assessment-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.save-assessment-button,
+.end-interview-button {
+  min-height: 48px;
+  border: none;
+  border-radius: 11px;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.save-assessment-button {
+  background: #00a99d;
+}
+
+.save-assessment-button:hover {
+  background: #008f86;
+}
+
+.end-interview-button {
+  background: #d93434;
+}
+
+.end-interview-button:hover {
+  background: #b92929;
+}
+
+@media (max-width: 1200px) {
+  .employer-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 850px) {
+  .employer-interview-information {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .employer-live-page {
+    padding: 16px;
+  }
+
+  .employer-live-header {
+    flex-direction: column;
+  }
+
+  .meeting-status-area {
+    align-items: flex-start;
+  }
+
+  .employer-interview-information {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation-options,
+  .assessment-actions {
+    grid-template-columns: 1fr;
+  }
+}

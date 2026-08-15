@@ -6,7 +6,6 @@ import Swal from "sweetalert2";
 import {
   FaHome,
   FaVideo,
-  FaQuestionCircle,
   FaUsers,
   FaChartBar,
   FaCog,
@@ -34,149 +33,335 @@ function DashboardLayout() {
 
   const [profileLoading, setProfileLoading] = useState(true);
 
+
+  /*
+   * ============================================================
+   * SIDEBAR
+   * ============================================================
+   */
+
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
+
 
   const toggleSidebar = () => {
     setSidebarOpen((current) => !current);
   };
 
+
+  /*
+   * ============================================================
+   * LOAD EMPLOYER PROFILE
+   * ============================================================
+   */
+
   const loadEmployerProfile = async () => {
+
     try {
-      const response = await fetch(PROFILE_API_URL, {
-        method: "GET",
-        credentials: "include",
-      });
+
+      const response = await fetch(
+        PROFILE_API_URL,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
 
       if (response.status === 401) {
+
         navigate("/login");
+
         return;
       }
 
+
       if (!response.ok) {
-        throw new Error("Failed to load employer profile.");
+
+        throw new Error(
+          "Failed to load employer profile."
+        );
+
       }
+
 
       const data = await response.json();
 
+
       setEmployer({
-        companyName: data.companyName || "",
-        fullName: data.fullName || "",
-        email: data.email || "",
-        phoneNumber: data.phoneNumber || "",
+
+        companyName:
+          data.companyName || "",
+
+        fullName:
+          data.fullName || "",
+
+        email:
+          data.email || "",
+
+        phoneNumber:
+          data.phoneNumber || "",
+
       });
+
+
     } catch (error) {
-      console.error("Profile loading error:", error);
+
+      console.error(
+        "Profile loading error:",
+        error
+      );
+
+
     } finally {
+
       setProfileLoading(false);
+
     }
+
   };
 
+
+  /*
+   * ============================================================
+   * INITIAL LOAD
+   * ============================================================
+   */
+
   useEffect(() => {
+
     loadEmployerProfile();
 
+
     const handleProfileUpdated = () => {
+
       loadEmployerProfile();
+
     };
+
 
     window.addEventListener(
       "employerProfileUpdated",
       handleProfileUpdated
     );
 
+
     return () => {
+
       window.removeEventListener(
         "employerProfileUpdated",
         handleProfileUpdated
       );
+
     };
+
   }, []);
 
+
+  /*
+   * ============================================================
+   * PREVENT BODY SCROLL WHEN MOBILE SIDEBAR IS OPEN
+   * ============================================================
+   */
+
   useEffect(() => {
+
     if (sidebarOpen) {
+
       document.body.style.overflow = "hidden";
+
     } else {
+
       document.body.style.overflow = "";
+
     }
+
 
     return () => {
+
       document.body.style.overflow = "";
+
     };
+
   }, [sidebarOpen]);
 
+
+  /*
+   * ============================================================
+   * GET EMPLOYER INITIALS
+   * ============================================================
+   */
+
   const getInitials = (name) => {
+
     if (!name?.trim()) {
+
       return "E";
+
     }
 
-    const names = name.trim().split(/\s+/);
+
+    const names = name
+      .trim()
+      .split(/\s+/);
+
 
     if (names.length === 1) {
-      return names[0].charAt(0).toUpperCase();
+
+      return names[0]
+        .charAt(0)
+        .toUpperCase();
+
     }
 
-    return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+
+    return `${names[0].charAt(0)}${names[1].charAt(0)}`
+      .toUpperCase();
+
   };
+
+
+  /*
+   * ============================================================
+   * LOGOUT
+   * ============================================================
+   */
 
   const handleLogout = async () => {
+
     const result = await Swal.fire({
+
       title: "Logout?",
+
       text: "Are you sure you want to logout?",
+
       icon: "question",
+
       showCancelButton: true,
+
       confirmButtonColor: "#00A99D",
+
       cancelButtonColor: "#d33",
+
       confirmButtonText: "Logout",
+
     });
+
 
     if (!result.isConfirmed) {
+
       return;
+
     }
+
 
     try {
-      await fetch("http://localhost:8080/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+
+      await fetch(
+        "http://localhost:8080/api/auth/logout",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+
     } catch (error) {
-      console.error("Logout request failed:", error);
+
+      console.error(
+        "Logout request failed:",
+        error
+      );
+
     }
 
+
     localStorage.clear();
+
     sessionStorage.clear();
 
+
     await Swal.fire({
+
       icon: "success",
+
       title: "Logged Out",
+
       text: "You have been logged out successfully.",
+
       timer: 1500,
+
       showConfirmButton: false,
+
     });
 
+
     navigate("/login");
+
   };
+
+
+  /*
+   * ============================================================
+   * ACTIVE LINK
+   * ============================================================
+   */
 
   const getLinkClass = ({ isActive }) =>
     isActive ? "active" : "";
 
+
+  /*
+   * ============================================================
+   * RENDER
+   * ============================================================
+   */
+
   return (
+
     <div className="dashboard">
+
+
+      {/* ========================================================
+          MOBILE SIDEBAR OVERLAY
+      ========================================================= */}
+
       <div
         className={`sidebar-overlay ${
-          sidebarOpen ? "sidebar-overlay-open" : ""
+          sidebarOpen
+            ? "sidebar-overlay-open"
+            : ""
         }`}
         onClick={closeSidebar}
       />
 
+
+      {/* ========================================================
+          SIDEBAR
+      ========================================================= */}
+
       <aside
         className={`sidebar ${
-          sidebarOpen ? "sidebar-open" : ""
+          sidebarOpen
+            ? "sidebar-open"
+            : ""
         }`}
       >
+
         <div>
+
+
+          {/* ====================================================
+              MOBILE SIDEBAR HEADER
+          ==================================================== */}
+
           <div className="sidebar-mobile-header">
-            <span>Navigation</span>
+
+            <span>
+              Navigation
+            </span>
+
 
             <button
               type="button"
@@ -184,157 +369,295 @@ function DashboardLayout() {
               onClick={closeSidebar}
               aria-label="Close navigation menu"
             >
+
               <FaTimes />
+
             </button>
+
           </div>
 
+
+          {/* ====================================================
+              BRAND
+          ==================================================== */}
+
           <div className="sidebar-brand">
+
             <div className="brand-card">
+
               <div className="brand-logo">
+
                 <img
                   src="/covira_tranperant.png"
                   alt="Covira Logo"
                 />
+
               </div>
+
 
               <div className="brand-text">
-                <h2>Covira</h2>
-                <p>Beyond Resumes</p>
+
+                <h2>
+                  Covira
+                </h2>
+
+                <p>
+                  Beyond Resumes
+                </p>
+
               </div>
+
             </div>
+
           </div>
 
+
+          {/* ====================================================
+              NAVIGATION
+          ==================================================== */}
+
           <nav>
+
+
+            {/* Dashboard */}
+
             <NavLink
               to="/dashboard"
               end
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaHome className="menu-icon" />
-              <span>Dashboard</span>
+
+              <span>
+                Dashboard
+              </span>
+
             </NavLink>
+
+
+            {/* Employer Profile */}
 
             <NavLink
               to="/dashboard/profile"
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaBuilding className="menu-icon" />
-              <span>Employer Profile</span>
+
+              <span>
+                Employer Profile
+              </span>
+
             </NavLink>
+
+
+            {/* Interviews */}
 
             <NavLink
               to="/dashboard/interviews"
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaVideo className="menu-icon" />
-              <span>Interviews</span>
+
+              <span>
+                Interviews
+              </span>
+
             </NavLink>
 
-            <NavLink
-              to="/dashboard/questions"
-              className={getLinkClass}
-              onClick={closeSidebar}
-            >
-              <FaQuestionCircle className="menu-icon" />
-              <span>Questions</span>
-            </NavLink>
+
+            {/* Candidates */}
 
             <NavLink
               to="/dashboard/candidates"
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaUsers className="menu-icon" />
-              <span>Candidates</span>
+
+              <span>
+                Candidates
+              </span>
+
             </NavLink>
+
+
+            {/* Analytics */}
 
             <NavLink
               to="/dashboard/analytics"
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaChartBar className="menu-icon" />
-              <span>Analytics</span>
+
+              <span>
+                Analytics
+              </span>
+
             </NavLink>
+
+
+            {/* Settings */}
 
             <NavLink
               to="/dashboard/settings"
               className={getLinkClass}
               onClick={closeSidebar}
             >
+
               <FaCog className="menu-icon" />
-              <span>Settings</span>
+
+              <span>
+                Settings
+              </span>
+
             </NavLink>
+
+
           </nav>
+
         </div>
+
+
+        {/* ======================================================
+            LOGOUT
+        ======================================================= */}
 
         <button
           className="logout-btn"
           onClick={handleLogout}
         >
+
           <FaSignOutAlt className="menu-icon" />
+
           Logout
+
         </button>
+
       </aside>
 
+
+      {/* ========================================================
+          MAIN CONTENT
+      ========================================================= */}
+
       <main className="dashboard-content">
+
+
+        {/* ======================================================
+            HEADER
+        ======================================================= */}
+
         <header className="dashboard-header">
+
+
+          {/* Mobile menu */}
+
           <button
             type="button"
             className="mobile-menu-button"
             onClick={toggleSidebar}
             aria-label="Open navigation menu"
           >
+
             <FaBars />
+
           </button>
 
+
+          {/* Header right */}
+
           <div className="header-right">
+
+
+            {/* Notification */}
+
             <div className="notification">
+
               <FaBell />
+
               <span className="notification-dot" />
+
             </div>
+
+
+            {/* Profile */}
 
             <NavLink
               to="/dashboard/profile"
               className="profile"
             >
+
               <div className="avatar">
+
                 {profileLoading
                   ? "..."
-                  : getInitials(employer.fullName)}
+                  : getInitials(
+                      employer.fullName
+                    )}
+
               </div>
+
 
               <div className="profile-details">
+
                 <h4>
+
                   {profileLoading
                     ? "Loading..."
-                    : employer.fullName || "Employer"}
+                    : employer.fullName ||
+                      "Employer"}
+
                 </h4>
 
+
                 <span>
+
                   {profileLoading
                     ? "Please wait"
-                    : employer.companyName || "Employer Account"}
+                    : employer.companyName ||
+                      "Employer Account"}
+
                 </span>
+
               </div>
+
             </NavLink>
+
           </div>
+
         </header>
 
+
+        {/* ======================================================
+            PAGE CONTENT
+        ======================================================= */}
+
         <div className="dashboard-page-content">
+
           <Outlet
             context={{
               employer,
               loadEmployerProfile,
             }}
           />
+
         </div>
+
       </main>
+
     </div>
+
   );
+
 }
 
 export default DashboardLayout;
