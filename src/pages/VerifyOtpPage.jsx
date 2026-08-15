@@ -78,7 +78,7 @@ function VerifyOtpPage() {
         try {
 
             const response = await fetch(
-                "http://localhost:8080/api/auth/verify-otp",
+                "http://localhost:8081/api/auth/verify-otp",
                 {
                     method: "POST",
                     headers: {

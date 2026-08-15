@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Public Pages
+// Public pages
 import LandingPage from "./pages/LandingPage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
@@ -8,18 +8,30 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 
-// Dashboard Pages
+// Dashboard pages
 import DashboardPage from "./pages/DashboardPage";
 import EmployerProfile from "./pages/EmployerProfile";
 import InterviewsPage from "./pages/InterviewsPage";
 import CreateInterviewPage from "./pages/CreateInterviewPage";
 import QuestionsPage from "./pages/QuestionsPage";
 import CandidatesPage from "./pages/CandidatesPage";
+import CandidateDetailsPage from "./pages/CandidateDetailsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
 
-// Dashboard Layout
+// Live interview pages
+import JoinLiveInterviewPage from "./pages/JoinLiveInterviewPage";
+import LiveInterviewPage from "./pages/LiveInterviewPage";
+import EmployerLiveInterviewPage from "./pages/EmployerLiveInterviewPage";
+
+// Interview creation
+
+// Candidate interview
+import CandidateInterviewPage from "./pages/CandidateInterviewPage";
+
+// Layout
 import DashboardLayout from "./layouts/DashboardLayout";
+
 
 
 function App() {
@@ -29,8 +41,8 @@ function App() {
             <Routes>
 
                 {/* =====================================================
-                    PUBLIC ROUTES
-                ===================================================== */}
+                    PUBLIC PAGES
+                ====================================================== */}
 
                 <Route
                     path="/"
@@ -51,7 +63,15 @@ function App() {
                     path="/forgot-password"
                     element={<ForgotPasswordPage />}
                 />
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
 
+                <Route
+                    path="/verify-otp"
+                    element={<VerifyOtpPage />}
+                />
                 <Route
                     path="/verify-otp"
                     element={<VerifyOtpPage />}
@@ -61,18 +81,52 @@ function App() {
                     path="/reset-password"
                     element={<ResetPasswordPage />}
                 />
+                <Route
+                    path="/reset-password"
+                    element={<ResetPasswordPage />}
+                />
 
 
                 {/* =====================================================
-                    DASHBOARD ROUTES
-                ===================================================== */}
+                    CANDIDATE INTERVIEW
+                ====================================================== */}
+
+                <Route
+                    path="/interview/:token"
+                    element={<CandidateInterviewPage />}
+                />
+
+
+                {/* =====================================================
+                    LIVE INTERVIEW PAGES
+                ====================================================== */}
+
+                <Route
+                    path="/join-live-interview"
+                    element={<JoinLiveInterviewPage />}
+                />
+
+                <Route
+                    path="/live-interview/:roomName"
+                    element={<LiveInterviewPage />}
+                />
+
+                <Route
+                    path="/employer/live-interview/:roomName"
+                    element={<EmployerLiveInterviewPage />}
+                />
+
+
+                {/* =====================================================
+                    EMPLOYER DASHBOARD
+                ====================================================== */}
 
                 <Route
                     path="/dashboard"
                     element={<DashboardLayout />}
                 >
 
-                    {/* Dashboard Home */}
+                    {/* Dashboard */}
                     <Route
                         index
                         element={<DashboardPage />}
@@ -85,16 +139,19 @@ function App() {
                         element={<EmployerProfile />}
                     />
 
+                    {/* Employer Profile */}
+                    <Route
+                        path="profile"
+                        element={<EmployerProfile />}
+                    />
 
-                    {/* =================================================
-                        INTERVIEWS
-                    ================================================= */}
 
-                    {/* All Interviews */}
+                    {/* Interviews */}
                     <Route
                         path="interviews"
                         element={<InterviewsPage />}
                     />
+
 
                     {/* Create Interview */}
                     <Route
@@ -103,40 +160,35 @@ function App() {
                     />
 
 
-                    {/* =================================================
-                        QUESTION BANK
-                    ================================================= */}
-
+                    {/* Questions for a specific interview */}
                     <Route
-                        path="questions"
+                        path="interviews/:interviewId/questions"
                         element={<QuestionsPage />}
                     />
 
 
-                    {/* =================================================
-                        CANDIDATES
-                    ================================================= */}
-
+                    {/* Candidates */}
                     <Route
                         path="candidates"
                         element={<CandidatesPage />}
                     />
 
 
-                    {/* =================================================
-                        ANALYTICS
-                    ================================================= */}
+                    {/* Candidate Details */}
+                    <Route
+                        path="candidates/:id"
+                        element={<CandidateDetailsPage />}
+                    />
 
+
+                    {/* Analytics */}
                     <Route
                         path="analytics"
                         element={<AnalyticsPage />}
                     />
 
 
-                    {/* =================================================
-                        SETTINGS
-                    ================================================= */}
-
+                    {/* Settings */}
                     <Route
                         path="settings"
                         element={<SettingsPage />}

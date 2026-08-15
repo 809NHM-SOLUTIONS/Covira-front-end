@@ -1,6 +1,5 @@
 import "../styles/CreateInterviewPage.css";
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -12,34 +11,26 @@ import {
     HiOutlineChevronUp,
     HiOutlineChevronDown,
     HiOutlineMagnifyingGlass,
-    HiOutlineCog6Tooth,
-    HiOutlineCalendarDays,
+    HiOutlineCog6Tooth
 } from "react-icons/hi2";
 
 function CreateInterviewPage() {
 
     const navigate = useNavigate();
 
-    // ============================================================
-    // PAGE STATE
-    // ============================================================
-
     const [step, setStep] = useState(1);
 
     const [loading, setLoading] = useState(false);
-
-    const [questionsLoading, setQuestionsLoading] = useState(true);
 
     const [error, setError] = useState("");
 
     const [success, setSuccess] = useState("");
 
-    const [searchTerm, setSearchTerm] = useState("");
-
-
-    // ============================================================
-    // INTERVIEW DETAILS
-    // ============================================================
+    /*
+     * ============================================================
+     * INTERVIEW DETAILS
+     * ============================================================
+     */
 
     const [interview, setInterview] = useState({
         title: "",
@@ -49,315 +40,124 @@ function CreateInterviewPage() {
         position: "",
         department: "",
         employmentType: "",
-        location: "",
-        deadline: "",
-        noDeadline: true,
+        location: ""
     });
 
 
-    // ============================================================
-    // QUESTION BANK
-    // ============================================================
+    /*
+     * ============================================================
+     * INTERVIEW QUESTIONS
+     * ============================================================
+     */
 
-    const [questionBank, setQuestionBank] = useState([]);
-
-
-    // ============================================================
-    // SELECTED QUESTIONS
-    // The order in this array is the interview order.
-    // ============================================================
-
-    const [selectedQuestions, setSelectedQuestions] = useState([]);
-
-
-    // ============================================================
-    // GET EMPLOYER EMAIL
-    // ============================================================
-
-    const getEmployerEmail = () => {
-
-        const possibleKeys = [
-            "userEmail",
-            "email",
-            "employerEmail",
-            "loggedInEmail"
-        ];
-
-        for (const key of possibleKeys) {
-
-            const value = localStorage.getItem(key);
-
-            if (value && value.trim()) {
-
-                console.log(
-                    `Employer email found using "${key}":`,
-                    value
-                );
-
-                return value.trim();
-            }
+    const [questions, setQuestions] = useState([
+        {
+            id: Date.now(),
+            question: "",
+            type: "Video",
+            required: true
         }
+    ]);
 
 
-        const storedUser =
-            localStorage.getItem("user");
-
-        if (storedUser) {
-
-            try {
-
-                const user =
-                    JSON.parse(storedUser);
-
-                if (user?.email) {
-
-                    console.log(
-                        "Employer email found inside user object:",
-                        user.email
-                    );
-
-                    return user.email.trim();
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Could not read stored user:",
-                    error
-                );
-            }
-        }
-
-
-        const storedEmployer =
-            localStorage.getItem("employer");
-
-        if (storedEmployer) {
-
-            try {
-
-                const employer =
-                    JSON.parse(storedEmployer);
-
-                if (employer?.email) {
-
-                    console.log(
-                        "Employer email found inside employer object:",
-                        employer.email
-                    );
-
-                    return employer.email.trim();
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Could not read stored employer:",
-                    error
-                );
-            }
-        }
-
-
-        console.error(
-            "NO EMPLOYER EMAIL FOUND IN LOCAL STORAGE"
-        );
-
-        return null;
-    };
-
-
-    // ============================================================
-    // LOAD ONLY THIS EMPLOYER'S QUESTION BANK
-    // ============================================================
-
-    useEffect(() => {
-
-        const loadQuestionBank = async () => {
-
-            const employerEmail =
-                getEmployerEmail();
-
-            console.log(
-                "Logged-in employer email:",
-                employerEmail
-            );
-
-
-            if (!employerEmail) {
-
-                setQuestionsLoading(false);
-
-                setError(
-                    "Your employer account could not be identified. Please log in again."
-                );
-
-                return;
-            }
-
-
-            try {
-
-                setQuestionsLoading(true);
-
-                setError("");
-
-
-                const response =
-                    await fetch(
-                        `http://localhost:8080/api/questions?email=${encodeURIComponent(
-                            employerEmail
-                        )}`
-                    );
-
-
-                const data =
-                    await response
-                        .json()
-                        .catch(() => []);
-
-
-                console.log(
-                    "Questions returned for employer:",
-                    data
-                );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data?.message ||
-                        "Failed to load your question bank."
-                    );
-                }
-
-
-                setQuestionBank(
-                    Array.isArray(data)
-                        ? data
-                        : []
-                );
-
-
-            } catch (err) {
-
-                console.error(
-                    "Question bank error:",
-                    err
-                );
-
-                setError(
-                    err.message ||
-                    "Unable to load your question bank."
-                );
-
-
-            } finally {
-
-                setQuestionsLoading(false);
-            }
-        };
-
-
-        loadQuestionBank();
-
-    }, []);
-
-
-    // ============================================================
-    // HANDLE INTERVIEW DETAILS + SETTINGS
-    // ============================================================
+    /*
+     * ============================================================
+     * HANDLE INTERVIEW CHANGES
+     * ============================================================
+     */
 
     const handleChange = (e) => {
 
-        const {
-            name,
-            value,
-            type,
-            checked
-        } = e.target;
+        setInterview({
+            ...interview,
+            [e.target.name]: e.target.value
+        });
 
-
-        setInterview((current) => ({
-            ...current,
-
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : value
-        }));
-
-
-        setError("");
     };
 
 
-    // ============================================================
-    // CHECK WHETHER QUESTION IS SELECTED
-    // ============================================================
+    /*
+     * ============================================================
+     * HANDLE QUESTION CHANGES
+     * ============================================================
+     */
 
-    const isQuestionSelected = (questionId) => {
+    const handleQuestionChange = (
+        id,
+        field,
+        value
+    ) => {
 
-        return selectedQuestions.some(
-            (question) =>
-                question.id === questionId
+        setQuestions((currentQuestions) =>
+            currentQuestions.map((question) =>
+                question.id === id
+                    ? {
+                        ...question,
+                        [field]: value
+                    }
+                    : question
+            )
         );
+
     };
 
 
-    // ============================================================
-    // SELECT / REMOVE QUESTION
-    // ============================================================
+    /*
+     * ============================================================
+     * ADD QUESTION
+     * ============================================================
+     */
 
-    const toggleQuestion = (question) => {
+    const addQuestion = () => {
 
-        setError("");
+        setQuestions((currentQuestions) => [
+
+            ...currentQuestions,
+
+            {
+                id:
+                    Date.now() +
+                    Math.random(),
+
+                question: "",
+
+                type: "Video",
+
+                required: true
+            }
+
+        ]);
+
+    };
 
 
-        if (
-            isQuestionSelected(question.id)
-        ) {
+    /*
+     * ============================================================
+     * DELETE QUESTION
+     * ============================================================
+     */
 
-            setSelectedQuestions(
-                (current) =>
-                    current.filter(
-                        (selected) =>
-                            selected.id !== question.id
-                    )
-            );
+    const deleteQuestion = (id) => {
 
+        if (questions.length === 1) {
             return;
         }
 
-
-        setSelectedQuestions(
-            (current) => [
-                ...current,
-                question
-            ]
+        setQuestions((currentQuestions) =>
+            currentQuestions.filter(
+                (question) =>
+                    question.id !== id
+            )
         );
+
     };
 
 
-    // ============================================================
-    // REMOVE SELECTED QUESTION
-    // ============================================================
-
-    const removeSelectedQuestion = (questionId) => {
-
-        setSelectedQuestions(
-            (current) =>
-                current.filter(
-                    (question) =>
-                        question.id !== questionId
-                )
-        );
-    };
-
-
-    // ============================================================
-    // MOVE QUESTION UP
-    // ============================================================
+    /*
+     * ============================================================
+     * MOVE QUESTION UP
+     * ============================================================
+     */
 
     const moveQuestionUp = (index) => {
 
@@ -365,104 +165,62 @@ function CreateInterviewPage() {
             return;
         }
 
-
         const updatedQuestions = [
-            ...selectedQuestions
+            ...questions
         ];
-
 
         const currentQuestion =
             updatedQuestions[index];
 
-
         updatedQuestions[index] =
             updatedQuestions[index - 1];
-
 
         updatedQuestions[index - 1] =
             currentQuestion;
 
+        setQuestions(updatedQuestions);
 
-        setSelectedQuestions(
-            updatedQuestions
-        );
     };
 
 
-    // ============================================================
-    // MOVE QUESTION DOWN
-    // ============================================================
+    /*
+     * ============================================================
+     * MOVE QUESTION DOWN
+     * ============================================================
+     */
 
     const moveQuestionDown = (index) => {
 
         if (
             index ===
-            selectedQuestions.length - 1
+            questions.length - 1
         ) {
             return;
         }
 
-
         const updatedQuestions = [
-            ...selectedQuestions
+            ...questions
         ];
-
 
         const currentQuestion =
             updatedQuestions[index];
 
-
         updatedQuestions[index] =
             updatedQuestions[index + 1];
-
 
         updatedQuestions[index + 1] =
             currentQuestion;
 
+        setQuestions(updatedQuestions);
 
-        setSelectedQuestions(
-            updatedQuestions
-        );
     };
 
 
-    // ============================================================
-    // SEARCH QUESTION BANK
-    // ============================================================
-
-    const filteredQuestions =
-        questionBank.filter((question) => {
-
-            const search =
-                searchTerm
-                    .toLowerCase()
-                    .trim();
-
-
-            if (!search) {
-                return true;
-            }
-
-
-            return (
-                question.questionText
-                    ?.toLowerCase()
-                    .includes(search) ||
-
-                question.category
-                    ?.toLowerCase()
-                    .includes(search) ||
-
-                question.difficulty
-                    ?.toLowerCase()
-                    .includes(search)
-            );
-        });
-
-
-    // ============================================================
-    // VALIDATE DETAILS
-    // ============================================================
+    /*
+     * ============================================================
+     * VALIDATE INTERVIEW DETAILS
+     * ============================================================
+     */
 
     const validateDetails = () => {
 
@@ -476,56 +234,20 @@ function CreateInterviewPage() {
         }
 
 
-        setError("");
-
-        return true;
-    };
-
-
-    // ============================================================
-    // VALIDATE QUESTIONS
-    // ============================================================
-
-    const validateQuestions = () => {
-
-        if (
-            selectedQuestions.length === 0
-        ) {
-
-            setError(
-                "Please select at least one question from your question bank."
-            );
-
-            return false;
-        }
-
-
-        setError("");
-
-        return true;
-    };
-
-
-    // ============================================================
-    // VALIDATE SETTINGS
-    // ============================================================
-
-    const validateSettings = () => {
-
         if (!interview.position.trim()) {
 
             setError(
-                "Please enter the position for this interview."
+                "Please enter the job position."
             );
 
             return false;
         }
 
 
-        if (!interview.department.trim()) {
+        if (!interview.department) {
 
             setError(
-                "Please enter the department for this interview."
+                "Please select a department."
             );
 
             return false;
@@ -535,7 +257,7 @@ function CreateInterviewPage() {
         if (!interview.employmentType) {
 
             setError(
-                "Please select the employment type."
+                "Please select an employment type."
             );
 
             return false;
@@ -552,28 +274,44 @@ function CreateInterviewPage() {
         }
 
 
-        // If a deadline has been selected,
-        // make sure it is in the future.
+        setError("");
 
-        if (
-            !interview.noDeadline &&
-            interview.deadline
-        ) {
-
-            const selectedDate =
-                new Date(interview.deadline);
+        return true;
+    };
 
 
-            if (
-                selectedDate <= new Date()
-            ) {
+    /*
+     * ============================================================
+     * VALIDATE QUESTIONS
+     * ============================================================
+     */
 
-                setError(
-                    "The candidate deadline must be in the future."
-                );
+    const validateQuestions = () => {
 
-                return false;
-            }
+        if (questions.length === 0) {
+
+            setError(
+                "Please add at least one interview question."
+            );
+
+            return false;
+        }
+
+
+        const emptyQuestion =
+            questions.find(
+                (question) =>
+                    !question.question.trim()
+            );
+
+
+        if (emptyQuestion) {
+
+            setError(
+                "Please enter text for every interview question."
+            );
+
+            return false;
         }
 
 
@@ -583,9 +321,11 @@ function CreateInterviewPage() {
     };
 
 
-    // ============================================================
-    // NEXT STEP
-    // ============================================================
+    /*
+     * ============================================================
+     * NEXT STEP
+     * ============================================================
+     */
 
     const nextStep = () => {
 
@@ -599,6 +339,7 @@ function CreateInterviewPage() {
             if (!validateDetails()) {
                 return;
             }
+
         }
 
 
@@ -607,14 +348,7 @@ function CreateInterviewPage() {
             if (!validateQuestions()) {
                 return;
             }
-        }
 
-
-        if (step === 3) {
-
-            if (!validateSettings()) {
-                return;
-            }
         }
 
 
@@ -624,13 +358,16 @@ function CreateInterviewPage() {
                 (currentStep) =>
                     currentStep + 1
             );
+
         }
     };
 
 
-    // ============================================================
-    // PREVIOUS STEP
-    // ============================================================
+    /*
+     * ============================================================
+     * PREVIOUS STEP
+     * ============================================================
+     */
 
     const previousStep = () => {
 
@@ -638,28 +375,29 @@ function CreateInterviewPage() {
 
         setSuccess("");
 
-
         if (step > 1) {
 
             setStep(
                 (currentStep) =>
                     currentStep - 1
             );
+
         }
+
     };
 
 
-    // ============================================================
-    // CREATE INTERVIEW
-    //
-    // NOTE:
-    // The settings are currently kept in frontend state.
-    // We will connect position, department, employment type,
-    // location and deadline to the backend after the frontend
-    // flow has been completed.
-    // ============================================================
+    /*
+     * ============================================================
+     * CREATE INTERVIEW + QUESTIONS
+     * ============================================================
+     */
 
     const createInterview = async () => {
+
+        /*
+         * Make sure details are valid.
+         */
 
         if (!validateDetails()) {
 
@@ -669,31 +407,13 @@ function CreateInterviewPage() {
         }
 
 
+        /*
+         * Make sure questions are valid.
+         */
+
         if (!validateQuestions()) {
 
             setStep(2);
-
-            return;
-        }
-
-
-        if (!validateSettings()) {
-
-            setStep(3);
-
-            return;
-        }
-
-
-        const employerEmail =
-            getEmployerEmail();
-
-
-        if (!employerEmail) {
-
-            setError(
-                "Your employer account could not be identified. Please log in again."
-            );
 
             return;
         }
@@ -708,38 +428,16 @@ function CreateInterviewPage() {
 
         try {
 
-            const questionIds =
-                selectedQuestions.map(
-                    (question) =>
-                        question.id
-                );
+            /*
+             * ====================================================
+             * STEP 1
+             * CREATE INTERVIEW
+             * ====================================================
+             */
 
-
-            const requestBody = {
-
-                title:
-                    interview.title.trim(),
-
-                description:
-                    interview.description.trim(),
-
-                employerEmail:
-                    employerEmail,
-
-                questionIds:
-                    questionIds
-            };
-
-
-            console.log(
-                "Creating interview:",
-                requestBody
-            );
-
-
-            const response =
+            const interviewResponse =
                 await fetch(
-                    "http://localhost:8080/api/interviews",
+                    "http://localhost:8081/api/interviews",
                     {
                         method: "POST",
 
@@ -748,48 +446,193 @@ function CreateInterviewPage() {
                                 "application/json"
                         },
 
-                        body:
-                            JSON.stringify(
-                                requestBody
-                            )
+                        credentials: "include",
+
+                        body: JSON.stringify({
+
+                            title:
+                                interview.title,
+
+                            position:
+                                interview.position,
+
+                            department:
+                                interview.department,
+
+                            employmentType:
+                                interview.employmentType,
+
+                            location:
+                                interview.location,
+
+                            description:
+                                interview.description
+
+                        })
                     }
                 );
 
 
-            const data =
-                await response
+            /*
+             * Try to read the backend response.
+             */
+
+            const createdInterview =
+                await interviewResponse
                     .json()
                     .catch(() => null);
 
 
-            if (!response.ok) {
+            /*
+             * Check interview creation.
+             */
+
+            if (!interviewResponse.ok) {
 
                 if (
-                    typeof data ===
+                    typeof createdInterview ===
                     "string"
                 ) {
 
-                    throw new Error(data);
+                    throw new Error(
+                        createdInterview
+                    );
+
                 }
 
 
                 throw new Error(
-                    data?.message ||
+                    createdInterview?.message ||
                     "Failed to create interview."
                 );
+
             }
 
 
-            console.log(
-                "Interview created successfully:",
-                data
-            );
+            /*
+             * ====================================================
+             * STEP 2
+             * GET CREATED INTERVIEW ID
+             * ====================================================
+             */
 
+            const interviewId =
+                createdInterview?.id;
+
+
+            if (!interviewId) {
+
+                console.error(
+                    "Interview response:",
+                    createdInterview
+                );
+
+                throw new Error(
+                    "Interview was created but no interview ID was returned."
+                );
+
+            }
+
+
+            /*
+             * ====================================================
+             * STEP 3
+             * CREATE QUESTIONS
+             * ====================================================
+             *
+             * Questions are created one by one.
+             *
+             * The backend automatically determines the
+             * question order.
+             */
+
+            for (
+                const question
+                of questions
+            ) {
+
+                const questionResponse =
+                    await fetch(
+                        `http://localhost:8081/api/interviews/${interviewId}/questions`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            credentials:
+                                "include",
+
+                            body:
+                                JSON.stringify({
+
+                                    questionText:
+                                        question.question,
+
+                                    questionType:
+                                        question.type,
+
+                                    timeLimit:
+                                        null
+
+                                })
+                        }
+                    );
+
+
+                const questionData =
+                    await questionResponse
+                        .json()
+                        .catch(() => null);
+
+
+                /*
+                 * Check question creation.
+                 */
+
+                if (
+                    !questionResponse.ok
+                ) {
+
+                    if (
+                        typeof questionData ===
+                        "string"
+                    ) {
+
+                        throw new Error(
+                            questionData
+                        );
+
+                    }
+
+
+                    throw new Error(
+                        questionData?.message ||
+                        "Failed to save interview question."
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * ====================================================
+             * STEP 4
+             * SUCCESS
+             * ====================================================
+             */
 
             setSuccess(
-                "Interview created successfully as a draft."
+                "Interview and questions created successfully."
             );
 
+
+            /*
+             * Navigate back to interviews.
+             */
 
             setTimeout(() => {
 
@@ -797,7 +640,7 @@ function CreateInterviewPage() {
                     "/dashboard/interviews"
                 );
 
-            }, 1200);
+            }, 1000);
 
 
         } catch (err) {
@@ -817,57 +660,26 @@ function CreateInterviewPage() {
         } finally {
 
             setLoading(false);
+
         }
+
     };
 
 
-    // ============================================================
-    // FORMAT DEADLINE FOR REVIEW
-    // ============================================================
-
-    const formatDeadline = () => {
-
-        if (
-            interview.noDeadline ||
-            !interview.deadline
-        ) {
-
-            return "No deadline";
-        }
-
-
-        const date =
-            new Date(interview.deadline);
-
-
-        if (Number.isNaN(date.getTime())) {
-
-            return "No deadline";
-        }
-
-
-        return date.toLocaleString(
-            undefined,
-            {
-                dateStyle: "medium",
-                timeStyle: "short"
-            }
-        );
-    };
-
-
-    // ============================================================
-    // RENDER
-    // ============================================================
+    /*
+     * ============================================================
+     * RENDER
+     * ============================================================
+     */
 
     return (
 
         <div className="create-interview-page">
 
 
-            {/* ==================================================
+            {/* ====================================================
                 HEADER
-            ================================================== */}
+            ==================================================== */}
 
             <div className="create-header">
 
@@ -878,8 +690,9 @@ function CreateInterviewPage() {
                     </h1>
 
                     <p>
-                        Build professional interview assessments
-                        for your candidates in just a few simple steps.
+                        Build professional interview
+                        assessments for your candidates
+                        in just a few simple steps.
                     </p>
 
                 </div>
@@ -889,13 +702,6 @@ function CreateInterviewPage() {
                     className="save-draft"
                     type="button"
                     disabled={loading}
-                    onClick={() => {
-
-                        setSuccess(
-                            "Your current interview details are saved on this page."
-                        );
-
-                    }}
                 >
                     Save Draft
                 </button>
@@ -903,9 +709,9 @@ function CreateInterviewPage() {
             </div>
 
 
-            {/* ==================================================
+            {/* ====================================================
                 PROGRESS
-            ================================================== */}
+            ==================================================== */}
 
             <div className="progress-card">
 
@@ -1013,39 +819,45 @@ function CreateInterviewPage() {
             </div>
 
 
-            {/* ==================================================
+            {/* ====================================================
                 ERROR
-            ================================================== */}
+            ==================================================== */}
 
             {error && (
 
                 <div className="form-error">
+
                     {error}
+
                 </div>
 
             )}
 
 
-            {/* ==================================================
+            {/* ====================================================
                 SUCCESS
-            ================================================== */}
+            ==================================================== */}
 
             {success && (
 
                 <div className="form-success">
+
                     {success}
+
                 </div>
 
             )}
 
 
-            {/* ==================================================
-                STEP 1 — DETAILS
-            ================================================== */}
+            {/* ====================================================
+                STEP 1
+                INTERVIEW DETAILS
+            ==================================================== */}
 
             {step === 1 && (
 
                 <div className="content-card">
+
 
                     <div className="card-title">
 
@@ -1063,7 +875,10 @@ function CreateInterviewPage() {
 
                     <div className="form-grid">
 
-                        <div className="form-group full-width">
+
+                        {/* TITLE */}
+
+                        <div className="form-group">
 
                             <label>
                                 Interview Title
@@ -1085,497 +900,12 @@ function CreateInterviewPage() {
                         </div>
 
 
-                        <div className="form-group full-width">
-
-                            <label>
-                                Description
-                            </label>
-
-                            <textarea
-                                rows="7"
-                                name="description"
-                                value={
-                                    interview.description
-                                }
-                                onChange={
-                                    handleChange
-                                }
-                                placeholder="Describe this interview assessment and what candidates can expect..."
-                                disabled={loading}
-                            />
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            )}
-
-
-            {/* ==================================================
-                STEP 2 — QUESTIONS
-            ================================================== */}
-
-            {step === 2 && (
-
-                <div className="content-card questions-card">
-
-                    <div className="card-title questions-header">
-
-                        <div>
-
-                            <h2>
-                                Select Interview Questions
-                            </h2>
-
-                            <p>
-                                Choose questions from your
-                                question bank for this interview.
-                            </p>
-
-                        </div>
-
-
-                        <div className="selected-count">
-
-                            <HiOutlineQuestionMarkCircle />
-
-                            <span>
-                                {selectedQuestions.length}
-                            </span>
-
-                            selected
-
-                        </div>
-
-                    </div>
-
-
-                    {/* INFORMATION */}
-
-                    <div className="question-info">
-
-                        <HiOutlineQuestionMarkCircle />
-
-                        <div>
-
-                            <strong>
-                                Build your interview assessment
-                            </strong>
-
-                            <p>
-                                Select the questions you want
-                                candidates to answer. You can
-                                arrange the selected questions
-                                in the order you prefer.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* SEARCH */}
-
-                    <div className="question-search">
-
-                        <HiOutlineMagnifyingGlass />
-
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) =>
-                                setSearchTerm(
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Search your question bank..."
-                            disabled={
-                                questionsLoading ||
-                                loading
-                            }
-                        />
-
-                    </div>
-
-
-                    {/* QUESTION BANK */}
-
-                    <div className="question-bank-section">
-
-                        <div className="section-heading">
-
-                            <h3>
-                                Your Question Bank
-                            </h3>
-
-                            <span>
-
-                                {
-                                    filteredQuestions.length
-                                }{" "}
-
-                                question
-
-                                {
-                                    filteredQuestions.length !==
-                                    1
-                                        ? "s"
-                                        : ""
-                                }
-
-                            </span>
-
-                        </div>
-
-
-                        {questionsLoading ? (
-
-                            <div className="question-bank-message">
-
-                                <div className="loading-spinner"></div>
-
-                                <p>
-                                    Loading your question bank...
-                                </p>
-
-                            </div>
-
-                        ) : questionBank.length === 0 ? (
-
-                            <div className="question-bank-empty">
-
-                                <HiOutlineQuestionMarkCircle />
-
-                                <h3>
-                                    Your question bank is empty
-                                </h3>
-
-                                <p>
-                                    Create questions in your
-                                    Question Bank first, then
-                                    return here to use them.
-                                </p>
-
-                                <button
-                                    type="button"
-                                    className="add-question-btn"
-                                    onClick={() =>
-                                        navigate(
-                                            "/dashboard/questions"
-                                        )
-                                    }
-                                >
-
-                                    <HiOutlinePlus />
-
-                                    Go to Question Bank
-
-                                </button>
-
-                            </div>
-
-                        ) : filteredQuestions.length === 0 ? (
-
-                            <div className="question-bank-message">
-
-                                <p>
-                                    No questions match your search.
-                                </p>
-
-                            </div>
-
-                        ) : (
-
-                            <div className="question-bank-list">
-
-                                {filteredQuestions.map(
-                                    (question) => {
-
-                                        const selected =
-                                            isQuestionSelected(
-                                                question.id
-                                            );
-
-
-                                        return (
-
-                                            <div
-                                                key={
-                                                    question.id
-                                                }
-                                                className={`question-bank-item ${
-                                                    selected
-                                                        ? "selected"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    toggleQuestion(
-                                                        question
-                                                    )
-                                                }
-                                            >
-
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        selected
-                                                    }
-                                                    onChange={() =>
-                                                        toggleQuestion(
-                                                            question
-                                                        )
-                                                    }
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                />
-
-
-                                                <div className="question-bank-content">
-
-                                                    <div className="question-bank-text">
-
-                                                        {
-                                                            question.questionText
-                                                        }
-
-                                                    </div>
-
-
-                                                    <div className="question-meta">
-
-                                                        {question.category && (
-
-                                                            <span className="question-category">
-
-                                                                {
-                                                                    question.category
-                                                                }
-
-                                                            </span>
-
-                                                        )}
-
-
-                                                        {question.difficulty && (
-
-                                                            <span className="question-difficulty">
-
-                                                                {
-                                                                    question.difficulty
-                                                                }
-
-                                                            </span>
-
-                                                        )}
-
-
-                                                        {question.responseDuration && (
-
-                                                            <span className="question-duration">
-
-                                                                {
-                                                                    question.responseDuration
-                                                                }{" "}
-                                                                seconds
-
-                                                            </span>
-
-                                                        )}
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        );
-                                    }
-                                )}
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-
-                    {/* SELECTED QUESTIONS */}
-
-                    {selectedQuestions.length > 0 && (
-
-                        <div className="selected-questions-section">
-
-                            <div className="section-heading">
-
-                                <div>
-
-                                    <h3>
-                                        Interview Order
-                                    </h3>
-
-                                    <p>
-                                        Candidates will receive
-                                        these questions in this order.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                            <div className="selected-questions-list">
-
-                                {selectedQuestions.map(
-                                    (
-                                        question,
-                                        index
-                                    ) => (
-
-                                        <div
-                                            key={
-                                                question.id
-                                            }
-                                            className="selected-question-item"
-                                        >
-
-                                            <div className="question-number">
-
-                                                {index + 1}
-
-                                            </div>
-
-
-                                            <div className="selected-question-content">
-
-                                                <strong>
-                                                    {
-                                                        question.questionText
-                                                    }
-                                                </strong>
-
-                                                <small>
-                                                    {
-                                                        question.category ||
-                                                        "General"
-                                                    }
-                                                </small>
-
-                                            </div>
-
-
-                                            <div className="question-actions">
-
-                                                <button
-                                                    type="button"
-                                                    title="Move question up"
-                                                    onClick={() =>
-                                                        moveQuestionUp(
-                                                            index
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        index ===
-                                                            0 ||
-                                                        loading
-                                                    }
-                                                >
-
-                                                    <HiOutlineChevronUp />
-
-                                                </button>
-
-
-                                                <button
-                                                    type="button"
-                                                    title="Move question down"
-                                                    onClick={() =>
-                                                        moveQuestionDown(
-                                                            index
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        index ===
-                                                            selectedQuestions.length -
-                                                            1 ||
-                                                        loading
-                                                    }
-                                                >
-
-                                                    <HiOutlineChevronDown />
-
-                                                </button>
-
-
-                                                <button
-                                                    type="button"
-                                                    title="Remove question"
-                                                    className="delete-question"
-                                                    onClick={() =>
-                                                        removeSelectedQuestion(
-                                                            question.id
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        loading
-                                                    }
-                                                >
-
-                                                    <HiOutlineTrash />
-
-                                                </button>
-
-                                            </div>
-
-                                        </div>
-
-                                    )
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    )}
-
-                </div>
-
-            )}
-
-
-            {/* ==================================================
-                STEP 3 — SETTINGS
-            ================================================== */}
-
-            {step === 3 && (
-
-                <div className="content-card">
-
-                    <div className="card-title">
-
-                        <h2>
-                            Interview Settings
-                        </h2>
-
-                        <p>
-                            Add the position details and decide
-                            when candidates must complete the interview.
-                        </p>
-
-                    </div>
-
-
-                    <div className="form-grid">
-
-
                         {/* POSITION */}
 
                         <div className="form-group">
 
                             <label>
-                                Position
+                                Job Position
                             </label>
 
                             <input
@@ -1587,8 +917,7 @@ function CreateInterviewPage() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="e.g. Junior Software Developer"
-                                disabled={loading}
+                                placeholder="Software Developer"
                             />
 
                         </div>
@@ -1602,8 +931,7 @@ function CreateInterviewPage() {
                                 Department
                             </label>
 
-                            <input
-                                type="text"
+                            <select
                                 name="department"
                                 value={
                                     interview.department
@@ -1611,9 +939,29 @@ function CreateInterviewPage() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="e.g. Information Technology"
-                                disabled={loading}
-                            />
+                            >
+
+                                <option value="">
+                                    Select Department
+                                </option>
+
+                                <option value="Human Resources">
+                                    Human Resources
+                                </option>
+
+                                <option value="Information Technology">
+                                    Information Technology
+                                </option>
+
+                                <option value="Finance">
+                                    Finance
+                                </option>
+
+                                <option value="Marketing">
+                                    Marketing
+                                </option>
+
+                            </select>
 
                         </div>
 
@@ -1634,31 +982,26 @@ function CreateInterviewPage() {
                                 onChange={
                                     handleChange
                                 }
-                                disabled={loading}
                             >
 
                                 <option value="">
                                     Select employment type
                                 </option>
 
-                                <option value="FULL_TIME">
-                                    Full-time
+                                <option value="Full Time">
+                                    Full Time
                                 </option>
 
-                                <option value="PART_TIME">
-                                    Part-time
+                                <option value="Part Time">
+                                    Part Time
                                 </option>
 
-                                <option value="CONTRACT">
-                                    Contract
-                                </option>
-
-                                <option value="INTERNSHIP">
+                                <option value="Internship">
                                     Internship
                                 </option>
 
-                                <option value="TEMPORARY">
-                                    Temporary
+                                <option value="Contract">
+                                    Contract
                                 </option>
 
                             </select>
@@ -1668,7 +1011,7 @@ function CreateInterviewPage() {
 
                         {/* LOCATION */}
 
-                        <div className="form-group">
+                        <div className="form-group full-width">
 
                             <label>
                                 Location
@@ -1683,122 +1026,31 @@ function CreateInterviewPage() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="e.g. Johannesburg / Remote / Hybrid"
-                                disabled={loading}
+                                placeholder="Johannesburg, South Africa"
                             />
 
                         </div>
 
 
-                        {/* DEADLINE */}
+                        {/* DESCRIPTION */}
 
                         <div className="form-group full-width">
 
                             <label>
-                                Candidate Deadline
+                                Description
                             </label>
 
-                            <div className="deadline-input-wrapper">
-
-                                <HiOutlineCalendarDays />
-
-                                <input
-                                    type="datetime-local"
-                                    name="deadline"
-                                    value={
-                                        interview.deadline
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    disabled={
-                                        loading ||
-                                        interview.noDeadline
-                                    }
-                                />
-
-                            </div>
-
-
-                            <p className="form-help-text">
-                                Set the date and time by which
-                                candidates must complete this interview.
-                            </p>
-
-                        </div>
-
-
-                        {/* NO DEADLINE */}
-
-                        <div className="form-group full-width">
-
-                            <label className="checkbox-setting">
-
-                                <input
-                                    type="checkbox"
-                                    name="noDeadline"
-                                    checked={
-                                        interview.noDeadline
-                                    }
-                                    onChange={(e) => {
-
-                                        handleChange(e);
-
-                                        if (
-                                            e.target.checked
-                                        ) {
-
-                                            setInterview(
-                                                (current) => ({
-                                                    ...current,
-                                                    noDeadline: true,
-                                                    deadline: ""
-                                                })
-                                            );
-                                        }
-
-                                    }}
-                                    disabled={loading}
-                                />
-
-                                <span>
-                                    No deadline
-                                </span>
-
-                            </label>
-
-                            <p className="form-help-text">
-                                Candidates can complete the interview
-                                at any time if no deadline is selected.
-                            </p>
-
-                        </div>
-
-
-                        {/* DEADLINE INFORMATION */}
-
-                        <div className="question-info full-width">
-
-                            <HiOutlineCalendarDays />
-
-                            <div>
-
-                                <strong>
-                                    Candidate deadline
-                                </strong>
-
-                                <p>
-
-                                    {interview.noDeadline
-                                        ? "There is currently no deadline. You can enable a deadline above."
-                                        : interview.deadline
-                                            ? `Candidates must complete this interview by ${formatDeadline()}.`
-                                            : "Choose a date and time above for the candidate deadline."
-                                    }
-
-                                </p>
-
-                            </div>
+                            <textarea
+                                rows="6"
+                                name="description"
+                                value={
+                                    interview.description
+                                }
+                                onChange={
+                                    handleChange
+                                }
+                                placeholder="Describe this interview assessment..."
+                            />
 
                         </div>
 
@@ -1809,37 +1061,385 @@ function CreateInterviewPage() {
             )}
 
 
-            {/* ==================================================
-                STEP 4 — PUBLISH / REVIEW
-            ================================================== */}
+            {/* ====================================================
+                STEP 2
+                QUESTIONS
+            ==================================================== */}
+
+            {step === 2 && (
+
+                <div className="content-card questions-card">
+
+
+                    {/* HEADER */}
+
+                    <div className="card-title questions-header">
+
+                        <div>
+
+                            <h2>
+                                Interview Questions
+                            </h2>
+
+                            <p>
+                                Create the questions
+                                that candidates will
+                                answer during this
+                                interview.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            className="add-question-btn"
+                            onClick={
+                                addQuestion
+                            }
+                            disabled={loading}
+                        >
+
+                            <HiOutlinePlus />
+
+                            Add Question
+
+                        </button>
+
+                    </div>
+
+
+                    {/* =================================================
+                        QUESTION INFORMATION
+                    ================================================== */}
+
+                    <div className="question-info">
+
+                        <HiOutlineQuestionMarkCircle />
+
+                        <div>
+
+                            <strong>
+                                Build your interview assessment
+                            </strong>
+
+                            <p>
+                                Add questions in the order
+                                you want the candidate to
+                                answer them. You can choose
+                                whether each question requires
+                                a video, text, or yes/no response.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* =================================================
+                        QUESTIONS LIST
+                    ================================================== */}
+
+                    <div className="questions-list">
+
+                        {questions.map(
+                            (
+                                question,
+                                index
+                            ) => (
+
+                                <div
+                                    className="question-card"
+                                    key={question.id}
+                                >
+
+
+                                    {/* QUESTION HEADER */}
+
+                                    <div className="question-card-header">
+
+
+                                        <div className="question-number">
+
+                                            <span>
+                                                Question{" "}
+                                                {index + 1}
+                                            </span>
+
+                                        </div>
+
+
+                                        <div className="question-actions">
+
+
+                                            {/* MOVE UP */}
+
+                                            <button
+                                                type="button"
+                                                title="Move question up"
+                                                onClick={() =>
+                                                    moveQuestionUp(
+                                                        index
+                                                    )
+                                                }
+                                                disabled={
+                                                    index ===
+                                                        0 ||
+                                                    loading
+                                                }
+                                            >
+
+                                                <HiOutlineChevronUp />
+
+                                            </button>
+
+
+                                            {/* MOVE DOWN */}
+
+                                            <button
+                                                type="button"
+                                                title="Move question down"
+                                                onClick={() =>
+                                                    moveQuestionDown(
+                                                        index
+                                                    )
+                                                }
+                                                disabled={
+                                                    index ===
+                                                        questions.length -
+                                                        1 ||
+                                                    loading
+                                                }
+                                            >
+
+                                                <HiOutlineChevronDown />
+
+                                            </button>
+
+
+                                            {/* DELETE */}
+
+                                            <button
+                                                type="button"
+                                                title="Delete question"
+                                                className="delete-question"
+                                                onClick={() =>
+                                                    deleteQuestion(
+                                                        question.id
+                                                    )
+                                                }
+                                                disabled={
+                                                    questions.length ===
+                                                        1 ||
+                                                    loading
+                                                }
+                                            >
+
+                                                <HiOutlineTrash />
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {/* QUESTION TEXT */}
+
+                                    <div className="form-group">
+
+                                        <label>
+                                            Question
+                                        </label>
+
+                                        <textarea
+                                            rows="4"
+                                            value={
+                                                question.question
+                                            }
+                                            onChange={(e) =>
+                                                handleQuestionChange(
+                                                    question.id,
+                                                    "question",
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Example: Tell us about yourself and your experience in software development."
+                                            disabled={loading}
+                                        />
+
+                                    </div>
+
+
+                                    {/* QUESTION OPTIONS */}
+
+                                    <div className="question-options">
+
+
+                                        {/* RESPONSE TYPE */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                Response Type
+                                            </label>
+
+                                            <select
+                                                value={
+                                                    question.type
+                                                }
+                                                onChange={(e) =>
+                                                    handleQuestionChange(
+                                                        question.id,
+                                                        "type",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                disabled={
+                                                    loading
+                                                }
+                                            >
+
+                                                <option value="Video">
+                                                    Video Response
+                                                </option>
+
+                                                <option value="Text">
+                                                    Written Response
+                                                </option>
+
+                                                <option value="Yes/No">
+                                                    Yes / No
+                                                </option>
+
+                                                <option value="Multiple Choice">
+                                                    Multiple Choice
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+
+                                        {/* REQUIRED */}
+
+                                        <div className="required-option">
+
+                                            <label>
+
+                                                <input
+                                                    type="checkbox"
+                                                    checked={
+                                                        question.required
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleQuestionChange(
+                                                            question.id,
+                                                            "required",
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        loading
+                                                    }
+                                                />
+
+                                                <span>
+                                                    Required question
+                                                </span>
+
+                                            </label>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            )
+                        )}
+
+                    </div>
+
+
+                    {/* =================================================
+                        ADD QUESTION BOTTOM
+                    ================================================== */}
+
+                    <button
+                        type="button"
+                        className="add-question-bottom"
+                        onClick={
+                            addQuestion
+                        }
+                        disabled={loading}
+                    >
+
+                        <HiOutlinePlus />
+
+                        Add Another Question
+
+                    </button>
+
+                </div>
+
+            )}
+
+
+            {/* ====================================================
+                STEP 3
+                SETTINGS
+            ==================================================== */}
+
+            {step === 3 && (
+
+                <div className="content-card coming-soon">
+
+                    <h2>
+                        Interview Settings
+                    </h2>
+
+                    <p>
+                        Configure interview duration,
+                        candidate permissions, retakes
+                        and other settings.
+                    </p>
+
+                </div>
+
+            )}
+
+
+            {/* ====================================================
+                STEP 4
+                PUBLISH
+            ==================================================== */}
 
             {step === 4 && (
 
                 <div className="content-card publish-card">
 
-                    <div className="card-title">
 
-                        <h2>
-                            Review Interview
-                        </h2>
-
-                        <p>
-                            Review everything before creating
-                            the interview.
-                        </p>
-
-                    </div>
+                    <h2>
+                        Publish Interview
+                    </h2>
 
 
-                    {/* SUMMARY */}
+                    <p>
+                        Review your interview and create
+                        it when you are ready.
+                    </p>
+
 
                     <div className="publish-summary">
 
 
+                        {/* INTERVIEW */}
+
                         <div>
 
                             <strong>
-                                Interview Title
+                                Interview
                             </strong>
 
                             <span>
@@ -1852,21 +1452,7 @@ function CreateInterviewPage() {
                         </div>
 
 
-                        <div>
-
-                            <strong>
-                                Description
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.description ||
-                                    "No description provided"
-                                }
-                            </span>
-
-                        </div>
-
+                        {/* POSITION */}
 
                         <div>
 
@@ -1884,6 +1470,8 @@ function CreateInterviewPage() {
                         </div>
 
 
+                        {/* DEPARTMENT */}
+
                         <div>
 
                             <strong>
@@ -1900,54 +1488,7 @@ function CreateInterviewPage() {
                         </div>
 
 
-                        <div>
-
-                            <strong>
-                                Employment Type
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.employmentType
-                                        ? interview.employmentType
-                                            .replace("_", " ")
-                                        : "Not specified"
-                                }
-                            </span>
-
-                        </div>
-
-
-                        <div>
-
-                            <strong>
-                                Location
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.location ||
-                                    "Not specified"
-                                }
-                            </span>
-
-                        </div>
-
-
-                        <div>
-
-                            <strong>
-                                Candidate Deadline
-                            </strong>
-
-                            <span>
-                                {
-                                    formatDeadline()
-                                }
-                            </span>
-
-                        </div>
-
+                        {/* QUESTIONS */}
 
                         <div>
 
@@ -1956,9 +1497,7 @@ function CreateInterviewPage() {
                             </strong>
 
                             <span>
-                                {
-                                    selectedQuestions.length
-                                }
+                                {questions.length}
                             </span>
 
                         </div>
@@ -1966,7 +1505,7 @@ function CreateInterviewPage() {
                     </div>
 
 
-                    {/* QUESTIONS */}
+                    {/* QUESTION PREVIEW */}
 
                     <div className="publish-questions">
 
@@ -1975,7 +1514,7 @@ function CreateInterviewPage() {
                         </h3>
 
 
-                        {selectedQuestions.map(
+                        {questions.map(
                             (
                                 question,
                                 index
@@ -1983,45 +1522,34 @@ function CreateInterviewPage() {
 
                                 <div
                                     className="publish-question"
-                                    key={
-                                        question.id
-                                    }
+                                    key={question.id}
                                 >
 
                                     <span>
                                         {index + 1}.
                                     </span>
 
-
                                     <div>
 
                                         <strong>
                                             {
-                                                question.questionText
+                                                question.question ||
+                                                "Question not specified"
                                             }
                                         </strong>
 
-
                                         <small>
-
                                             {
-                                                question.category ||
-                                                "General"
+                                                question.type
                                             }
 
                                             {" • "}
 
                                             {
-                                                question.difficulty ||
-                                                "Not specified"
+                                                question.required
+                                                    ? "Required"
+                                                    : "Optional"
                                             }
-
-                                            {
-                                                question.responseDuration
-                                                    ? ` • ${question.responseDuration} seconds`
-                                                    : ""
-                                            }
-
                                         </small>
 
                                     </div>
@@ -2033,35 +1561,19 @@ function CreateInterviewPage() {
 
                     </div>
 
-
-                    {/* DRAFT NOTICE */}
-
-                    <div className="draft-notice">
-
-                        <strong>
-                            Ready to create?
-                        </strong>
-
-                        <p>
-                            Your interview will initially be
-                            created as a <strong>Draft</strong>.
-                            You can publish it later when it
-                            is ready to be shared with candidates.
-                        </p>
-
-                    </div>
-
                 </div>
 
             )}
 
 
-            {/* ==================================================
-                NAVIGATION BUTTONS
-            ================================================== */}
+            {/* ====================================================
+                NAVIGATION
+            ==================================================== */}
 
             <div className="wizard-buttons">
 
+
+                {/* PREVIOUS */}
 
                 <button
                     type="button"
@@ -2078,6 +1590,8 @@ function CreateInterviewPage() {
                 </button>
 
 
+                {/* NEXT */}
+
                 {step < 4 && (
 
                     <button
@@ -2087,18 +1601,18 @@ function CreateInterviewPage() {
                             nextStep
                         }
                         disabled={
-                            loading ||
-                            (
-                                step === 2 &&
-                                questionsLoading
-                            )
+                            loading
                         }
                     >
+
                         Next →
+
                     </button>
 
                 )}
 
+
+                {/* CREATE */}
 
                 {step === 4 && (
 
@@ -2127,5 +1641,12 @@ function CreateInterviewPage() {
         </div>
     );
 }
+
+
+/*
+ * ================================================================
+ * DEFAULT EXPORT
+ * ================================================================
+ */
 
 export default CreateInterviewPage;

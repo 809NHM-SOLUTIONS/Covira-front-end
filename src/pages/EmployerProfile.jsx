@@ -4,10 +4,10 @@ import AlertModal from "../components/AlertModal";
 import PasswordRequirements from "../components/PasswordRequirements";
 
 
-const API_URL = "http://localhost:8080/api/employer/profile";
-const CHANGE_PASSWORD_REQUEST_URL = "http://localhost:8080/api/employer/profile/change-password/request";
-const CHANGE_PASSWORD_VERIFY_URL = "http://localhost:8080/api/employer/profile/change-password/verify";
-const CHANGE_PASSWORD_RESEND_URL = "http://localhost:8080/api/employer/profile/change-password/resend";
+const API_URL = "http://localhost:8081/api/employer/profile";
+const CHANGE_PASSWORD_REQUEST_URL = "http://localhost:8081/api/employer/profile/change-password/request";
+const CHANGE_PASSWORD_VERIFY_URL = "http://localhost:8081/api/employer/profile/change-password/verify";
+const CHANGE_PASSWORD_RESEND_URL = "http://localhost:8081/api/employer/profile/change-password/resend";
 const OTP_EXPIRY_SECONDS = 300;
 
 function ChangePasswordSection() {
@@ -219,7 +219,7 @@ function ChangePasswordSection() {
         message || "Your password has been changed successfully. Please log in again with your new password.",
         async () => {
           try {
-            await fetch("http://localhost:8080/api/auth/logout", {
+            await fetch("http://localhost:8081/api/auth/logout", {
               method: "POST",
               credentials: "include",
             });

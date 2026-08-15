@@ -1,0 +1,573 @@
+/* ==========================================
+   Covira Candidates Page
+========================================== */
+
+.candidates-page {
+    width: 100%;
+}
+
+/* ==========================================
+   Header
+========================================== */
+
+.candidates-header {
+    margin-bottom: 28px;
+}
+
+.candidates-header h1 {
+    margin: 0 0 8px;
+    color: #243B8F;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.candidates-header p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+/* ==========================================
+   Search & Filter
+========================================== */
+
+.candidate-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    margin-bottom: 18px;
+}
+
+.candidate-search {
+    position: relative;
+    flex: 1;
+}
+
+.candidate-search svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b8190;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.candidate-search input {
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+
+    padding: 12px 15px 12px 44px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #333;
+
+    font-size: 14px;
+    outline: none;
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.candidate-search input::placeholder {
+    color: #9ca3af;
+}
+
+.candidate-search input:focus {
+    border-color: #00A99D;
+    box-shadow: 0 0 0 4px rgba(0, 169, 157, 0.12);
+}
+
+/* ==========================================
+   Filter
+========================================== */
+
+.candidate-filter {
+    position: relative;
+    width: 190px;
+    flex-shrink: 0;
+}
+
+.candidate-filter svg {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    color: #243B8F;
+    font-size: 17px;
+
+    pointer-events: none;
+    z-index: 2;
+}
+
+.candidate-filter select {
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+
+    padding: 12px 14px 12px 40px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #333;
+
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.candidate-filter select:focus {
+    border-color: #00A99D;
+    box-shadow: 0 0 0 4px rgba(0, 169, 157, 0.12);
+}
+
+/* ==========================================
+   Result Count
+========================================== */
+
+.candidate-count {
+    margin-bottom: 12px;
+    color: #7b8190;
+    font-size: 13px;
+}
+
+.candidate-count strong {
+    color: #243B8F;
+}
+
+/* ==========================================
+   Candidate Table
+========================================== */
+
+.candidate-table-wrapper {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    overflow-x: auto;
+}
+
+.candidate-table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: collapse;
+}
+
+/* ==========================================
+   Table Header
+========================================== */
+
+.candidate-table thead th {
+    background: #243B8F;
+    color: #ffffff;
+
+    padding: 16px 18px;
+
+    text-align: left;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Table Body
+========================================== */
+
+.candidate-table tbody td {
+    padding: 17px 18px;
+
+    border-bottom: 1px solid #edf0f5;
+
+    color: #444;
+    font-size: 14px;
+
+    vertical-align: middle;
+}
+
+.candidate-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.candidate-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.candidate-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ==========================================
+   Candidate Person
+========================================== */
+
+.candidate-person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.candidate-avatar {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(
+        135deg,
+        #243B8F,
+        #00A99D
+    );
+
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.candidate-person > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.candidate-person strong {
+    color: #243B8F;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.candidate-person span {
+    color: #7b8190;
+    font-size: 12px;
+}
+
+/* ==========================================
+   Candidate Position
+========================================== */
+
+.candidate-position {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.candidate-position strong {
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.candidate-position span {
+    color: #7b8190;
+    font-size: 12px;
+}
+
+/* ==========================================
+   Status Badges
+========================================== */
+
+.status-badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 82px;
+
+    padding: 6px 12px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Pending */
+
+.status-pending {
+    background: #fff4d6;
+    color: #9a7200;
+}
+
+/* Completed */
+
+.status-completed {
+    background: #e6f7ef;
+    color: #16834b;
+}
+
+/* Reviewed */
+
+.status-reviewed {
+    background: #e9edff;
+    color: #3154b8;
+}
+
+/* ==========================================
+   View Candidate Button
+========================================== */
+
+.view-candidate-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border: none;
+    border-radius: 9px;
+
+    padding: 9px 13px;
+
+    background: #eef2ff;
+    color: #243B8F;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.view-candidate-btn svg {
+    font-size: 16px;
+}
+
+.view-candidate-btn:hover {
+    background: #243B8F;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   No Candidates
+========================================== */
+
+.no-candidates {
+    text-align: center;
+    padding: 50px 20px !important;
+}
+
+.no-candidates h3 {
+    margin: 0 0 8px;
+    color: #243B8F;
+    font-size: 18px;
+}
+
+.no-candidates p {
+    margin: 0;
+    color: #7b8190;
+    font-size: 14px;
+}
+
+/* ==========================================
+   Mobile Candidate List
+========================================== */
+
+.candidate-mobile-list {
+    display: none;
+}
+
+/* ==========================================
+   Tablet
+========================================== */
+
+@media (max-width: 1024px) {
+
+    .candidate-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .candidate-filter {
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media (max-width: 768px) {
+
+    .candidates-page {
+        padding: 20px 15px;
+    }
+
+    .candidates-header h1 {
+        font-size: 28px;
+    }
+
+    .candidates-header p {
+        font-size: 14px;
+    }
+
+    .candidate-toolbar {
+        padding: 15px;
+        gap: 12px;
+    }
+
+    /* Hide desktop table */
+
+    .candidate-table-wrapper {
+        display: none;
+    }
+
+    /* Show mobile cards */
+
+    .candidate-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .candidate-mobile-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px;
+
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+
+        border: 1px solid #edf0f5;
+    }
+
+    .candidate-mobile-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+
+        margin-bottom: 18px;
+    }
+
+    .candidate-mobile-header .candidate-person {
+        min-width: 0;
+    }
+
+    .candidate-mobile-header .candidate-person > div:last-child {
+        min-width: 0;
+    }
+
+    .candidate-mobile-header .candidate-person strong {
+        font-size: 14px;
+    }
+
+    .candidate-mobile-header .candidate-person span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 180px;
+    }
+
+    .candidate-mobile-header .status-badge {
+        flex-shrink: 0;
+    }
+
+    /* Mobile Details */
+
+    .candidate-mobile-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        padding: 15px 0;
+
+        border-top: 1px solid #edf0f5;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    .candidate-mobile-details div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .candidate-mobile-details small {
+        color: #7b8190;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .candidate-mobile-details strong {
+        color: #333;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* Mobile View Button */
+
+    .mobile-view-btn {
+        width: 100%;
+        margin-top: 15px;
+        box-sizing: border-box;
+    }
+}
+
+/* ==========================================
+   Very Small Screens
+========================================== */
+
+@media (max-width: 480px) {
+
+    .candidates-page {
+        padding: 15px 10px;
+    }
+
+    .candidates-header h1 {
+        font-size: 24px;
+    }
+
+    .candidate-toolbar {
+        padding: 12px;
+    }
+
+    .candidate-search input,
+    .candidate-filter select {
+        min-height: 46px;
+    }
+
+    .candidate-mobile-card {
+        padding: 15px;
+    }
+
+    .candidate-mobile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .candidate-mobile-header .candidate-person span {
+        max-width: 220px;
+    }
+}
