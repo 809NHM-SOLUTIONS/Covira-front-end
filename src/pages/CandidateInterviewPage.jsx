@@ -1,5 +1,13 @@
 import "../styles/CandidateInterviewPage.css";
-import { useEffect, useRef, useState } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { useParams } from "react-router-dom";
 
 import {
@@ -17,37 +25,26 @@ const API_BASE_URL = "http://localhost:8080";
 function CandidateInterviewPage() {
   const { token } = useParams();
 
-  /*
-   * ============================================================
-   * INTERVIEW
-   * ============================================================
-   */
+  // ============================================================
+  // INTERVIEW
+  // ============================================================
 
   const [interview, setInterview] = useState(null);
   const [questions, setQuestions] = useState([]);
 
-  /*
-   * ============================================================
-   * CANDIDATE REGISTRATION
-   * ============================================================
-   */
+  // ============================================================
+  // CANDIDATE
+  // ============================================================
 
   const [candidateId, setCandidateId] = useState(null);
-
   const [candidateName, setCandidateName] = useState("");
   const [candidateEmail, setCandidateEmail] = useState("");
+  const [candidateRegistered, setCandidateRegistered] = useState(false);
+  const [registeringCandidate, setRegisteringCandidate] = useState(false);
 
-  const [candidateRegistered, setCandidateRegistered] =
-    useState(false);
-
-  const [registeringCandidate, setRegisteringCandidate] =
-    useState(false);
-
-  /*
-   * ============================================================
-   * INTERVIEW STATE
-   * ============================================================
-   */
+  // ============================================================
+  // INTERVIEW STATE
+  // ============================================================
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
 
@@ -59,6 +56,9 @@ function CandidateInterviewPage() {
 
   const [recordings, setRecordings] = useState({});
 
+  const [uploadingQuestion, setUploadingQuestion] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const [textAnswers, setTextAnswers] = useState({});
   const [selectedAnswers, setSelectedAnswers] = useState({});
 
@@ -69,22 +69,131 @@ function CandidateInterviewPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  /*
-   * ============================================================
-   * REFS
-   * ============================================================
-   */
+  // ============================================================
+  // REFS
+  // ============================================================
 
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
 
-  /*
-   * ============================================================
-   * LOAD INTERVIEW + QUESTIONS
-   * ============================================================
-   */
+  const recordingQuestionRef = useRef(null);
+
+  const uploadPromisesRef = useRef({});
+
+  const mountedRef = useRef(true);
+
+  // ============================================================
+  // CURRENT QUESTION
+  // ============================================================
+
+  const question = questions[currentQuestion];
+
+  const questionType = useMemo(() => {
+    return question?.questionType?.trim()?.toLowerCase() || "";
+  }, [question]);
+
+  const isVideo = questionType === "video";
+  const isText = questionType === "text";
+
+  const isMultipleChoice =
+    questionType === "multiple choice" ||
+    questionType === "multiple-choice" ||
+    questionType === "multiple_choice";
+
+  const isUploadingCurrentQuestion =
+    uploadingQuestion === currentQuestion;
+
+  // ============================================================
+  // COMPONENT MOUNT / UNMOUNT
+  // ============================================================
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // ============================================================
+  // HELPER: READ API RESPONSE
+  // ============================================================
+
+  const parseApiResponse = async (response) => {
+    const text = await response.text();
+
+    if (!text) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  };
+
+  // ============================================================
+  // HELPER: GET ERROR MESSAGE
+  // ============================================================
+
+  const getApiErrorMessage = (response, data) => {
+    if (response.status === 413) {
+      return "The recorded video is too large for the server. Increase the Spring Boot multipart file size limit.";
+    }
+
+    if (response.status === 400) {
+      if (typeof data === "string" && data.trim()) {
+        return data;
+      }
+
+      return (
+        data?.message ||
+        data?.error ||
+        "The server rejected the video upload."
+      );
+    }
+
+    if (response.status === 401) {
+      return "You are not authorized to upload this response.";
+    }
+
+    if (response.status === 403) {
+      return "The server denied this video upload.";
+    }
+
+    if (response.status === 404) {
+      return (
+        data?.message ||
+        data?.error ||
+        "The video upload endpoint could not be found."
+      );
+    }
+
+    if (response.status >= 500) {
+      return (
+        data?.message ||
+        data?.error ||
+        "The server encountered an error while saving the video."
+      );
+    }
+
+    if (typeof data === "string" && data.trim()) {
+      return data;
+    }
+
+    return (
+      data?.message ||
+      data?.error ||
+      "Failed to upload video."
+    );
+  };
+
+  // ============================================================
+  // LOAD INTERVIEW
+  // ============================================================
 
   useEffect(() => {
     const loadInterview = async () => {
@@ -92,99 +201,127 @@ function CandidateInterviewPage() {
         setLoading(true);
         setError("");
 
-        /*
-         * Load interview
-         */
+        if (!token) {
+          throw new Error("Interview token is missing.");
+        }
 
-        const interviewResponse = await fetch(
-          `${API_BASE_URL}/api/interviews/public/${token}`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          }
+        // --------------------------------------------------------
+        // LOAD INTERVIEW
+        // --------------------------------------------------------
+
+        const interviewUrl =
+          `${API_BASE_URL}/api/interviews/public/${token}`;
+
+        console.log("Loading interview:", interviewUrl);
+
+        const interviewResponse = await fetch(interviewUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const interviewData =
+          await parseApiResponse(interviewResponse);
+
+        console.log(
+          "Interview response:",
+          interviewResponse.status,
+          interviewData
         );
 
         if (!interviewResponse.ok) {
-          if (interviewResponse.status === 404) {
-            throw new Error(
-              "This interview link is invalid or no longer available."
-            );
-          }
-
-          throw new Error("Failed to load interview.");
+          throw new Error(
+            interviewResponse.status === 404
+              ? "This interview link is invalid or no longer available."
+              : getApiErrorMessage(
+                  interviewResponse,
+                  interviewData
+                )
+          );
         }
 
-        const interviewData =
-          await interviewResponse.json();
+        if (!interviewData) {
+          throw new Error(
+            "The server returned an empty interview response."
+          );
+        }
 
         setInterview(interviewData);
 
-        /*
-         * Load questions
-         */
+        // --------------------------------------------------------
+        // LOAD QUESTIONS
+        // --------------------------------------------------------
 
-        const questionsResponse = await fetch(
-          `${API_BASE_URL}/api/interviews/public/${token}/questions`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          }
+        const questionsUrl =
+          `${API_BASE_URL}/api/interviews/public/${token}/questions`;
+
+        console.log("Loading questions:", questionsUrl);
+
+        const questionsResponse = await fetch(questionsUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const questionsData =
+          await parseApiResponse(questionsResponse);
+
+        console.log(
+          "Questions response:",
+          questionsResponse.status,
+          questionsData
         );
 
         if (!questionsResponse.ok) {
           throw new Error(
-            "Interview loaded, but the interview questions could not be loaded."
+            getApiErrorMessage(
+              questionsResponse,
+              questionsData
+            )
           );
         }
 
-        const questionsData =
-          await questionsResponse.json();
-
-        setQuestions(
-          Array.isArray(questionsData)
-            ? questionsData
-            : []
-        );
+        if (Array.isArray(questionsData)) {
+          setQuestions(questionsData);
+        } else if (
+          Array.isArray(questionsData?.questions)
+        ) {
+          setQuestions(questionsData.questions);
+        } else {
+          setQuestions([]);
+        }
       } catch (err) {
         console.error(
           "Error loading candidate interview:",
           err
         );
 
-        setError(
-          err.message ||
-            "Unable to load interview."
-        );
+        if (mountedRef.current) {
+          setError(
+            err.message ||
+              "Unable to load interview."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (mountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
-    if (token) {
-      loadInterview();
-    }
+    loadInterview();
   }, [token]);
 
-  /*
-   * ============================================================
-   * CURRENT QUESTION
-   * ============================================================
-   */
-
-  const question = questions[currentQuestion];
-
-  /*
-   * ============================================================
-   * REGISTER CANDIDATE
-   * ============================================================
-   */
+  // ============================================================
+  // REGISTER CANDIDATE
+  // ============================================================
 
   const registerCandidate = async (event) => {
     event.preventDefault();
+
+    setMediaError("");
 
     if (!candidateName.trim()) {
       setMediaError("Please enter your full name.");
@@ -198,7 +335,6 @@ function CandidateInterviewPage() {
 
     try {
       setRegisteringCandidate(true);
-      setMediaError("");
 
       const response = await fetch(
         `${API_BASE_URL}/api/candidates/public`,
@@ -216,27 +352,37 @@ function CandidateInterviewPage() {
         }
       );
 
-      const data = await response.json();
+      const data = await parseApiResponse(response);
+
+      console.log(
+        "Candidate registration:",
+        response.status,
+        data
+      );
 
       if (!response.ok) {
         throw new Error(
-          typeof data === "string"
-            ? data
-            : "Failed to register candidate."
+          getApiErrorMessage(response, data)
         );
       }
 
-      /*
-       * Save candidate information returned
-       * by Spring Boot.
-       */
+      if (!data?.id) {
+        throw new Error(
+          "Candidate was created, but the server did not return a candidate ID."
+        );
+      }
 
       setCandidateId(data.id);
-      setCandidateName(data.name || candidateName);
-      setCandidateEmail(data.email || candidateEmail);
+
+      setCandidateName(
+        data.name || candidateName.trim()
+      );
+
+      setCandidateEmail(
+        data.email || candidateEmail.trim()
+      );
 
       setCandidateRegistered(true);
-
       setMediaError("");
     } catch (err) {
       console.error(
@@ -253,24 +399,24 @@ function CandidateInterviewPage() {
     }
   };
 
-  /*
-   * ============================================================
-   * TIMER
-   * ============================================================
-   */
+  // ============================================================
+  // TIMER
+  // ============================================================
 
   useEffect(() => {
-    if (!question) {
+    if (!question?.timeLimit) {
       setTimeRemaining(null);
-      return;
+      return undefined;
     }
 
-    if (!question.timeLimit) {
+    const limit = Number(question.timeLimit);
+
+    if (!Number.isFinite(limit) || limit <= 0) {
       setTimeRemaining(null);
-      return;
+      return undefined;
     }
 
-    setTimeRemaining(question.timeLimit);
+    setTimeRemaining(limit);
 
     const timer = setInterval(() => {
       setTimeRemaining((previous) => {
@@ -281,8 +427,11 @@ function CandidateInterviewPage() {
         if (previous <= 1) {
           clearInterval(timer);
 
-          if (recording) {
-            stopRecording();
+          if (
+            mediaRecorderRef.current &&
+            mediaRecorderRef.current.state !== "inactive"
+          ) {
+            mediaRecorderRef.current.stop();
           }
 
           return 0;
@@ -297,11 +446,9 @@ function CandidateInterviewPage() {
     };
   }, [currentQuestion, question]);
 
-  /*
-   * ============================================================
-   * CAMERA
-   * ============================================================
-   */
+  // ============================================================
+  // CAMERA
+  // ============================================================
 
   const startCamera = async () => {
     try {
@@ -312,44 +459,445 @@ function CandidateInterviewPage() {
         !navigator.mediaDevices.getUserMedia
       ) {
         throw new Error(
-          "Your browser does not support camera access."
+          "Your browser does not support camera and microphone access."
         );
+      }
+
+      // Stop any previous stream first
+      if (streamRef.current) {
+        streamRef.current
+          .getTracks()
+          .forEach((track) => track.stop());
       }
 
       const stream =
         await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
+          video: {
+            width: {
+              ideal: 1280,
+            },
+            height: {
+              ideal: 720,
+            },
+            facingMode: "user",
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
         });
 
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+
+        try {
+          await videoRef.current.play();
+        } catch (playError) {
+          console.warn(
+            "Video autoplay warning:",
+            playError
+          );
+        }
       }
 
       setCameraReady(true);
+      setMediaError("");
     } catch (err) {
       console.error("Camera error:", err);
 
-      setMediaError(
-        "Camera and microphone access is required. Please allow access in your browser."
-      );
+      let message =
+        "Camera and microphone access is required.";
+
+      if (err?.name === "NotAllowedError") {
+        message =
+          "Camera and microphone permission was denied. Allow access in Chrome and try again.";
+      } else if (err?.name === "NotFoundError") {
+        message =
+          "No camera or microphone was found on this device.";
+      } else if (err?.name === "NotReadableError") {
+        message =
+          "Your camera or microphone is already being used by another application.";
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      setMediaError(message);
+      setCameraReady(false);
     }
   };
 
-  /*
-   * ============================================================
-   * START RECORDING
-   * ============================================================
-   */
+  // ============================================================
+  // GET BEST MEDIA RECORDER MIME TYPE
+  // ============================================================
+
+  const getSupportedMimeType = () => {
+    if (
+      typeof MediaRecorder === "undefined"
+    ) {
+      return "";
+    }
+
+    const types = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4",
+    ];
+
+    for (const type of types) {
+      try {
+        if (
+          MediaRecorder.isTypeSupported(type)
+        ) {
+          return type;
+        }
+      } catch {
+        // Continue checking the next type.
+      }
+    }
+
+    return "";
+  };
+
+  // ============================================================
+  // UPLOAD VIDEO
+  // ============================================================
+
+  const uploadVideoResponse = useCallback(
+    async (questionIndex, blob) => {
+      if (!candidateId) {
+        throw new Error(
+          "Candidate ID is missing. Please register first."
+        );
+      }
+
+      if (!token) {
+        throw new Error(
+          "Interview token is missing."
+        );
+      }
+
+      if (!blob || blob.size === 0) {
+        throw new Error(
+          "The recorded video is empty."
+        );
+      }
+
+      const questionNumber =
+        questionIndex + 1;
+
+      const formData = new FormData();
+
+      formData.append(
+        "interviewToken",
+        token
+      );
+
+      formData.append(
+        "questionNumber",
+        String(questionNumber)
+      );
+
+      const extension =
+        blob.type.includes("mp4")
+          ? "mp4"
+          : "webm";
+
+      const filename =
+        `candidate-${candidateId}-question-${questionNumber}.${extension}`;
+
+      /*
+       * IMPORTANT:
+       *
+       * Do NOT manually set Content-Type.
+       *
+       * Browser creates the multipart boundary.
+       */
+
+      formData.append(
+        "video",
+        blob,
+        filename
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      console.log(
+        "VIDEO UPLOAD START"
+      );
+
+      console.log(
+        "Endpoint:",
+        `${API_BASE_URL}/api/candidates/${candidateId}/responses/video`
+      );
+
+      console.log(
+        "Candidate ID:",
+        candidateId
+      );
+
+      console.log(
+        "Question number:",
+        questionNumber
+      );
+
+      console.log(
+        "Video type:",
+        blob.type
+      );
+
+      console.log(
+        "Video size:",
+        `${(
+          blob.size /
+          1024 /
+          1024
+        ).toFixed(2)} MB`
+      );
+
+      console.log(
+        "======================================"
+      );
+
+      if (mountedRef.current) {
+        setUploadProgress(0);
+      }
+
+      /*
+       * ----------------------------------------------------------
+       * XMLHttpRequest
+       * ----------------------------------------------------------
+       *
+       * We use XHR instead of fetch here because it gives us
+       * real upload progress.
+       */
+
+      const result =
+        await new Promise(
+          (resolve, reject) => {
+            const xhr =
+              new XMLHttpRequest();
+
+            xhr.open(
+              "POST",
+              `${API_BASE_URL}/api/candidates/${candidateId}/responses/video`
+            );
+
+            xhr.setRequestHeader(
+              "Accept",
+              "application/json"
+            );
+
+            xhr.upload.onprogress = (
+              event
+            ) => {
+              if (
+                event.lengthComputable &&
+                mountedRef.current
+              ) {
+                const progress = Math.round(
+                  (event.loaded /
+                    event.total) *
+                    100
+                );
+
+                setUploadProgress(
+                  progress
+                );
+              }
+            };
+
+            xhr.onload = () => {
+              const responseText =
+                xhr.responseText || "";
+
+              let data;
+
+              try {
+                data = responseText
+                  ? JSON.parse(
+                      responseText
+                    )
+                  : null;
+              } catch {
+                data = responseText;
+              }
+
+              console.log(
+                "Video upload response:",
+                xhr.status,
+                data
+              );
+
+              if (
+                xhr.status >= 200 &&
+                xhr.status < 300
+              ) {
+                resolve({
+                  status: xhr.status,
+                  data,
+                });
+              } else {
+                const fakeResponse = {
+                  status: xhr.status,
+                };
+
+                reject(
+                  new Error(
+                    getApiErrorMessage(
+                      fakeResponse,
+                      data
+                    )
+                  )
+                );
+              }
+            };
+
+            xhr.onerror = () => {
+              reject(
+                new Error(
+                  "Network error while uploading the video. Make sure the Spring Boot backend is running."
+                )
+              );
+            };
+
+            xhr.onabort = () => {
+              reject(
+                new Error(
+                  "Video upload was cancelled."
+                )
+              );
+            };
+
+            xhr.ontimeout = () => {
+              reject(
+                new Error(
+                  "Video upload timed out."
+                )
+              );
+            };
+
+            /*
+             * 10 minute timeout for large videos.
+             */
+
+            xhr.timeout =
+              10 * 60 * 1000;
+
+            xhr.send(formData);
+          }
+        );
+
+      if (mountedRef.current) {
+        setUploadProgress(100);
+      }
+
+      const data = result.data;
+
+      /*
+       * Backend returns CandidateDto.
+       *
+       * CandidateDto contains responses.
+       */
+
+      let uploadedVideoUrl = null;
+
+      if (
+        Array.isArray(
+          data?.responses
+        )
+      ) {
+        const responseItem =
+          data.responses.find(
+            (item) =>
+              Number(
+                item.questionNumber
+              ) ===
+              questionNumber
+          );
+
+        if (responseItem) {
+          uploadedVideoUrl =
+            responseItem.videoUrl ||
+            null;
+        }
+      }
+
+      /*
+       * Save upload information locally.
+       */
+
+      if (mountedRef.current) {
+        setRecordings((previous) => ({
+          ...previous,
+
+          [questionIndex]: {
+            ...previous[
+              questionIndex
+            ],
+
+            uploaded: true,
+            uploadFailed: false,
+
+            videoUrlFromServer:
+              uploadedVideoUrl,
+
+            serverResponse: data,
+          },
+        }));
+      }
+
+      console.log(
+        `Video uploaded successfully for question ${questionNumber}.`
+      );
+
+      return data;
+    },
+    [candidateId, token]
+  );
+
+  // ============================================================
+  // START RECORDING
+  // ============================================================
 
   const startRecording = () => {
     if (!streamRef.current) {
       setMediaError(
-        "Please enable your camera before starting the recording."
+        "Please enable your camera before recording."
       );
 
+      return;
+    }
+
+    if (!candidateId) {
+      setMediaError(
+        "Candidate registration is incomplete."
+      );
+
+      return;
+    }
+
+    if (
+      typeof MediaRecorder ===
+      "undefined"
+    ) {
+      setMediaError(
+        "Your browser does not support video recording."
+      );
+
+      return;
+    }
+
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !==
+        "inactive"
+    ) {
       return;
     }
 
@@ -358,23 +906,22 @@ function CandidateInterviewPage() {
 
       chunksRef.current = [];
 
-      let mimeType = "video/webm";
+      recordingQuestionRef.current =
+        currentQuestion;
 
-      if (
-        MediaRecorder.isTypeSupported(
-          "video/webm;codecs=vp9"
-        )
-      ) {
-        mimeType =
-          "video/webm;codecs=vp9";
-      } else if (
-        MediaRecorder.isTypeSupported(
-          "video/webm;codecs=vp8"
-        )
-      ) {
-        mimeType =
-          "video/webm;codecs=vp8";
+      const mimeType =
+        getSupportedMimeType();
+
+      if (!mimeType) {
+        throw new Error(
+          "Your browser does not support a compatible video recording format."
+        );
       }
+
+      console.log(
+        "Starting MediaRecorder:",
+        mimeType
+      );
 
       const recorder =
         new MediaRecorder(
@@ -384,172 +931,334 @@ function CandidateInterviewPage() {
           }
         );
 
-      mediaRecorderRef.current = recorder;
+      mediaRecorderRef.current =
+        recorder;
 
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
+      recorder.ondataavailable = (
+        event
+      ) => {
+        if (
+          event.data &&
+          event.data.size > 0
+        ) {
+          chunksRef.current.push(
+            event.data
+          );
         }
       };
 
-      recorder.onstop = () => {
+      recorder.onerror = (event) => {
+        console.error(
+          "MediaRecorder error:",
+          event
+        );
+
+        if (mountedRef.current) {
+          setMediaError(
+            "An error occurred while recording the video."
+          );
+
+          setRecording(false);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const questionIndex =
+          recordingQuestionRef.current;
+
+        const chunks =
+          chunksRef.current;
+
+        chunksRef.current = [];
+
+        if (
+          questionIndex === null ||
+          questionIndex === undefined
+        ) {
+          console.error(
+            "Recording question index is missing."
+          );
+
+          return;
+        }
+
+        if (!chunks.length) {
+          if (mountedRef.current) {
+            setMediaError(
+              "No video data was recorded. Please try recording again."
+            );
+          }
+
+          return;
+        }
+
         const blob = new Blob(
-          chunksRef.current,
+          chunks,
           {
-            type: mimeType,
+            type:
+              recorder.mimeType ||
+              mimeType ||
+              "video/webm",
           }
         );
+
+        console.log(
+          "Recorded video created:",
+          {
+            type: blob.type,
+            size: blob.size,
+          }
+        );
+
+        if (blob.size === 0) {
+          if (mountedRef.current) {
+            setMediaError(
+              "The recorded video is empty. Please record again."
+            );
+          }
+
+          return;
+        }
 
         const videoUrl =
           URL.createObjectURL(blob);
 
-        setRecordings((previous) => ({
-          ...previous,
+        /*
+         * Show the recording immediately.
+         */
 
-          [currentQuestion]: {
-            blob,
-            videoUrl,
-          },
-        }));
+        if (mountedRef.current) {
+          setRecordings((previous) => ({
+            ...previous,
+
+            [questionIndex]: {
+              blob,
+              videoUrl,
+
+              uploaded: false,
+              uploadFailed: false,
+
+              videoUrlFromServer: null,
+            },
+          }));
+        }
+
+        /*
+         * Upload immediately.
+         */
+
+        try {
+          if (mountedRef.current) {
+            setUploadingQuestion(
+              questionIndex
+            );
+
+            setUploadProgress(0);
+            setMediaError("");
+          }
+
+          const uploadPromise =
+            uploadVideoResponse(
+              questionIndex,
+              blob
+            );
+
+          uploadPromisesRef.current[
+            questionIndex
+          ] = uploadPromise;
+
+          await uploadPromise;
+
+          console.log(
+            `Question ${
+              questionIndex + 1
+            } upload completed.`
+          );
+        } catch (err) {
+          console.error(
+            "VIDEO UPLOAD FAILED:",
+            err
+          );
+
+          if (mountedRef.current) {
+            setMediaError(
+              err.message ||
+                `Failed to upload video for question ${
+                  questionIndex + 1
+                }.`
+            );
+
+            setRecordings((previous) => ({
+              ...previous,
+
+              [questionIndex]: {
+                ...previous[
+                  questionIndex
+                ],
+
+                uploaded: false,
+                uploadFailed: true,
+              },
+            }));
+          }
+        } finally {
+          if (
+            mountedRef.current
+          ) {
+            setUploadingQuestion(
+              null
+            );
+          }
+
+          delete uploadPromisesRef.current[
+            questionIndex
+          ];
+        }
       };
 
-      recorder.start();
+      /*
+       * Start recording in 1-second chunks.
+       */
+
+      recorder.start(1000);
 
       setRecording(true);
+      setMediaError("");
+
+      console.log(
+        `Recording started for question ${
+          currentQuestion + 1
+        }`
+      );
     } catch (err) {
       console.error(
-        "Recording error:",
+        "Recording start error:",
         err
       );
 
+      setRecording(false);
+
       setMediaError(
-        "Unable to start video recording."
+        err.message ||
+          "Unable to start video recording."
       );
     }
   };
 
-  /*
-   * ============================================================
-   * STOP RECORDING
-   * ============================================================
-   */
+  // ============================================================
+  // STOP RECORDING
+  // ============================================================
 
   const stopRecording = () => {
+    const recorder =
+      mediaRecorderRef.current;
+
     if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !==
+      recorder &&
+      recorder.state !==
         "inactive"
     ) {
-      mediaRecorderRef.current.stop();
+      try {
+        recorder.stop();
+      } catch (err) {
+        console.error(
+          "Stop recording error:",
+          err
+        );
+      }
     }
 
     setRecording(false);
   };
 
-  /*
-   * ============================================================
-   * CLEANUP CAMERA
-   * ============================================================
-   */
+  // ============================================================
+  // WAIT FOR ALL UPLOADS
+  // ============================================================
 
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current
-          .getTracks()
-          .forEach((track) =>
-            track.stop()
-          );
+  const waitForVideoUploads =
+    async () => {
+      const promises =
+        Object.values(
+          uploadPromisesRef.current
+        );
+
+      if (!promises.length) {
+        return;
       }
 
-      Object.values(recordings).forEach(
-        (recordingItem) => {
-          if (recordingItem?.videoUrl) {
-            URL.revokeObjectURL(
-              recordingItem.videoUrl
-            );
-          }
-        }
+      await Promise.all(
+        promises
       );
     };
-  }, []);
 
-  /*
-   * ============================================================
-   * TEXT ANSWER
-   * ============================================================
-   */
+  // ============================================================
+  // CHECK WHETHER QUESTION HAS ANSWER
+  // ============================================================
 
-  const handleTextAnswer = (event) => {
-    setTextAnswers((previous) => ({
-      ...previous,
+  const hasAnswer = useCallback(
+    (index = currentQuestion) => {
+      const current =
+        questions[index];
 
-      [currentQuestion]:
-        event.target.value,
-    }));
-  };
+      if (!current) {
+        return false;
+      }
 
-  /*
-   * ============================================================
-   * MULTIPLE CHOICE
-   * ============================================================
-   */
+      const type =
+        current.questionType
+          ?.trim()
+          ?.toLowerCase();
 
-  const handleMultipleChoice = (event) => {
-    setSelectedAnswers((previous) => ({
-      ...previous,
+      if (type === "video") {
+        return Boolean(
+          recordings[index]?.uploaded
+        );
+      }
 
-      [currentQuestion]:
-        event.target.value,
-    }));
-  };
+      if (type === "text") {
+        return Boolean(
+          textAnswers[index]?.trim()
+        );
+      }
 
-  /*
-   * ============================================================
-   * CHECK ANSWER
-   * ============================================================
-   */
+      if (
+        type === "multiple choice" ||
+        type === "multiple-choice" ||
+        type === "multiple_choice"
+      ) {
+        return Boolean(
+          selectedAnswers[index]
+        );
+      }
 
-  const hasAnswer = () => {
-    if (!question) {
-      return false;
-    }
+      return true;
+    },
+    [
+      currentQuestion,
+      questions,
+      recordings,
+      textAnswers,
+      selectedAnswers,
+    ]
+  );
 
-    const type =
-      question.questionType?.toLowerCase();
+  // ============================================================
+  // NEXT QUESTION
+  // ============================================================
 
-    if (type === "video") {
-      return Boolean(
-        recordings[currentQuestion]
-      );
-    }
-
-    if (type === "text") {
-      return Boolean(
-        textAnswers[currentQuestion]?.trim()
-      );
+  const nextQuestion = async () => {
+    if (recording) {
+      stopRecording();
+      return;
     }
 
     if (
-      type === "multiple choice"
+      isUploadingCurrentQuestion
     ) {
-      return Boolean(
-        selectedAnswers[currentQuestion]
+      setMediaError(
+        "Please wait for your video to finish uploading."
       );
-    }
 
-    return true;
-  };
-
-  /*
-   * ============================================================
-   * NEXT QUESTION
-   * ============================================================
-   */
-
-  const nextQuestion = () => {
-    if (recording) {
-      stopRecording();
       return;
     }
 
@@ -574,18 +1283,28 @@ function CandidateInterviewPage() {
         (previous) =>
           previous + 1
       );
+
+      setUploadProgress(0);
     }
   };
 
-  /*
-   * ============================================================
-   * PREVIOUS QUESTION
-   * ============================================================
-   */
+  // ============================================================
+  // PREVIOUS QUESTION
+  // ============================================================
 
   const previousQuestion = () => {
     if (recording) {
       stopRecording();
+      return;
+    }
+
+    if (
+      isUploadingCurrentQuestion
+    ) {
+      setMediaError(
+        "Please wait for your video to finish uploading."
+      );
+
       return;
     }
 
@@ -596,14 +1315,93 @@ function CandidateInterviewPage() {
         (previous) =>
           previous - 1
       );
+
+      setUploadProgress(0);
     }
   };
 
-  /*
-   * ============================================================
-   * SUBMIT INTERVIEW
-   * ============================================================
-   */
+  // ============================================================
+  // RECORD AGAIN
+  // ============================================================
+
+  const recordAgain = () => {
+    if (
+      isUploadingCurrentQuestion
+    ) {
+      setMediaError(
+        "Please wait for the current upload to finish."
+      );
+
+      return;
+    }
+
+    const existing =
+      recordings[currentQuestion];
+
+    if (existing?.videoUrl) {
+      URL.revokeObjectURL(
+        existing.videoUrl
+      );
+    }
+
+    setRecordings((previous) => {
+      const updated = {
+        ...previous,
+      };
+
+      delete updated[
+        currentQuestion
+      ];
+
+      return updated;
+    });
+
+    setMediaError("");
+    setUploadProgress(0);
+
+    /*
+     * Camera remains active.
+     * Candidate can immediately record again.
+     */
+  };
+
+  // ============================================================
+  // TEXT ANSWER
+  // ============================================================
+
+  const handleTextAnswer = (
+    event
+  ) => {
+    setTextAnswers((previous) => ({
+      ...previous,
+
+      [currentQuestion]:
+        event.target.value,
+    }));
+
+    setMediaError("");
+  };
+
+  // ============================================================
+  // MULTIPLE CHOICE
+  // ============================================================
+
+  const handleMultipleChoice = (
+    event
+  ) => {
+    setSelectedAnswers((previous) => ({
+      ...previous,
+
+      [currentQuestion]:
+        event.target.value,
+    }));
+
+    setMediaError("");
+  };
+
+  // ============================================================
+  // SUBMIT INTERVIEW
+  // ============================================================
 
   const submitInterview = async () => {
     if (recording) {
@@ -614,6 +1412,16 @@ function CandidateInterviewPage() {
     if (!candidateId) {
       setMediaError(
         "Candidate registration is incomplete."
+      );
+
+      return;
+    }
+
+    if (
+      uploadingQuestion !== null
+    ) {
+      setMediaError(
+        "Please wait for the video upload to finish."
       );
 
       return;
@@ -635,64 +1443,98 @@ function CandidateInterviewPage() {
       setMediaError("");
 
       /*
-       * Build answers object.
+       * Wait for any upload still in progress.
+       */
+
+      await waitForVideoUploads();
+
+      /*
+       * Validate every required question.
+       */
+
+      for (
+        let index = 0;
+        index < questions.length;
+        index++
+      ) {
+        const current =
+          questions[index];
+
+        if (
+          current?.required &&
+          !hasAnswer(index)
+        ) {
+          throw new Error(
+            `Question ${
+              index + 1
+            } is required and has not been answered.`
+          );
+        }
+      }
+
+      /*
+       * Build answers expected by the backend.
        *
-       * The backend currently accepts:
+       * Backend expects question indexes:
        *
-       * {
-       *   answers: {
-       *      "0": "...",
-       *      "1": "...",
-       *      "2": "..."
-       *   }
-       * }
-       *
-       * Video recordings are currently converted
-       * to a placeholder value because the current
-       * CandidateResponse entity only stores videoUrl.
-       *
-       * Actual video upload will be added separately.
+       * 0 = first question
+       * 1 = second question
+       * etc.
        */
 
       const answers = {};
 
-      questions.forEach((_, index) => {
-        const questionForIndex =
-          questions[index];
+      questions.forEach(
+        (_, index) => {
+          const current =
+            questions[index];
 
-        const type =
-          questionForIndex?.questionType?.toLowerCase();
+          const type =
+            current?.questionType
+              ?.trim()
+              ?.toLowerCase();
 
-        if (type === "video") {
-          const recordingItem =
-            recordings[index];
-
-          if (recordingItem) {
+          if (type === "video") {
             answers[index] =
-              "Video response recorded";
+              recordings[index]
+                ?.uploaded
+                ? "Video response recorded"
+                : "";
+          } else if (
+            type === "text"
+          ) {
+            answers[index] =
+              textAnswers[index] ||
+              "";
+          } else if (
+            type === "multiple choice" ||
+            type === "multiple-choice" ||
+            type === "multiple_choice"
+          ) {
+            answers[index] =
+              selectedAnswers[
+                index
+              ] || "";
           } else {
             answers[index] = "";
           }
-        } else if (type === "text") {
-          answers[index] =
-            textAnswers[index] || "";
-        } else if (
-          type === "multiple choice"
-        ) {
-          answers[index] =
-            selectedAnswers[index] || "";
-        } else {
-          answers[index] = "";
         }
-      });
+      );
+
+      console.log(
+        "Submitting interview answers:",
+        answers
+      );
 
       const response = await fetch(
         `${API_BASE_URL}/api/candidates/${candidateId}/submit`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+            "Content-Type":
+              "application/json",
+            Accept:
+              "application/json",
           },
           body: JSON.stringify({
             answers,
@@ -700,20 +1542,25 @@ function CandidateInterviewPage() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await parseApiResponse(
+          response
+        );
+
+      console.log(
+        "Interview submission response:",
+        response.status,
+        data
+      );
 
       if (!response.ok) {
         throw new Error(
-          typeof data === "string"
-            ? data
-            : "Failed to submit interview."
+          getApiErrorMessage(
+            response,
+            data
+          )
         );
       }
-
-      console.log(
-        "Interview submitted:",
-        data
-      );
 
       setSubmitted(true);
     } catch (err) {
@@ -731,14 +1578,73 @@ function CandidateInterviewPage() {
     }
   };
 
-  /*
-   * ============================================================
-   * FORMAT TIME
-   * ============================================================
-   */
+  // ============================================================
+  // CLEANUP
+  // ============================================================
 
-  const formatTime = (seconds) => {
-    if (seconds === null) {
+  useEffect(() => {
+    return () => {
+      /*
+       * Stop camera.
+       */
+
+      if (streamRef.current) {
+        streamRef.current
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
+
+        streamRef.current = null;
+      }
+
+      /*
+       * Stop recorder.
+       */
+
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !==
+          "inactive"
+      ) {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {
+          // Ignore cleanup errors.
+        }
+      }
+
+      /*
+       * Revoke local preview URLs.
+       */
+
+      Object.values(
+        recordings
+      ).forEach(
+        (recordingItem) => {
+          if (
+            recordingItem?.videoUrl
+          ) {
+            URL.revokeObjectURL(
+              recordingItem.videoUrl
+            );
+          }
+        }
+      );
+    };
+  }, []);
+
+  // ============================================================
+  // FORMAT TIME
+  // ============================================================
+
+  const formatTime = (
+    seconds
+  ) => {
+    if (
+      seconds === null ||
+      seconds === undefined
+    ) {
       return "";
     }
 
@@ -754,17 +1660,15 @@ function CandidateInterviewPage() {
     ).padStart(2, "0")}`;
   };
 
-  /*
-   * ============================================================
-   * LOADING
-   * ============================================================
-   */
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   if (loading) {
     return (
       <main className="candidate-interview-page">
         <div className="candidate-interview-loading">
-          <div className="loading-spinner"></div>
+          <div className="loading-spinner" />
 
           <h2>
             Loading Interview
@@ -779,11 +1683,9 @@ function CandidateInterviewPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * ERROR
-   * ============================================================
-   */
+  // ============================================================
+  // ERROR
+  // ============================================================
 
   if (error) {
     return (
@@ -801,11 +1703,9 @@ function CandidateInterviewPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * NO QUESTIONS
-   * ============================================================
-   */
+  // ============================================================
+  // NO QUESTIONS
+  // ============================================================
 
   if (!questions.length) {
     return (
@@ -826,11 +1726,9 @@ function CandidateInterviewPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * SUBMITTED
-   * ============================================================
-   */
+  // ============================================================
+  // SUBMITTED
+  // ============================================================
 
   if (submitted) {
     return (
@@ -860,32 +1758,24 @@ function CandidateInterviewPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * CANDIDATE REGISTRATION SCREEN
-   * ============================================================
-   */
+  // ============================================================
+  // REGISTRATION
+  // ============================================================
 
   if (!candidateRegistered) {
     return (
       <main className="candidate-interview-page">
-
         <header className="candidate-interview-header">
-
           <div className="candidate-interview-brand">
-
             <h1>Covira</h1>
 
             <span>
               Candidate Interview
             </span>
-
           </div>
-
         </header>
 
         <section className="candidate-interview-intro">
-
           <h1>
             {interview?.title ||
               "Interview"}
@@ -902,13 +1792,10 @@ function CandidateInterviewPage() {
               {interview.description}
             </span>
           )}
-
         </section>
 
         <section className="candidate-interview-content">
-
           <div className="candidate-question-card">
-
             <span className="question-number">
               Candidate Registration
             </span>
@@ -921,15 +1808,11 @@ function CandidateInterviewPage() {
               Please enter your details
               below to start your interview.
             </p>
-
           </div>
 
           <div className="candidate-recording-card">
-
             <div className="recording-header">
-
               <div>
-
                 <h2>
                   Your Details
                 </h2>
@@ -938,9 +1821,7 @@ function CandidateInterviewPage() {
                   Your information will be
                   associated with this interview.
                 </p>
-
               </div>
-
             </div>
 
             <form
@@ -948,21 +1829,19 @@ function CandidateInterviewPage() {
                 registerCandidate
               }
             >
-
               <div
                 style={{
                   display: "grid",
                   gap: "16px",
                 }}
               >
-
                 <div>
-
                   <label
                     htmlFor="candidateName"
                     style={{
                       display: "block",
-                      marginBottom: "8px",
+                      marginBottom:
+                        "8px",
                       fontWeight: "600",
                     }}
                   >
@@ -981,11 +1860,13 @@ function CandidateInterviewPage() {
                       )
                     }
                     placeholder="Enter your full name"
+                    autoComplete="name"
                     required
                     style={{
                       width: "100%",
                       padding: "14px",
-                      borderRadius: "10px",
+                      borderRadius:
+                        "10px",
                       border:
                         "1px solid #dbe2ea",
                       fontSize: "15px",
@@ -993,16 +1874,15 @@ function CandidateInterviewPage() {
                         "border-box",
                     }}
                   />
-
                 </div>
 
                 <div>
-
                   <label
                     htmlFor="candidateEmail"
                     style={{
                       display: "block",
-                      marginBottom: "8px",
+                      marginBottom:
+                        "8px",
                       fontWeight: "600",
                     }}
                   >
@@ -1021,11 +1901,13 @@ function CandidateInterviewPage() {
                       )
                     }
                     placeholder="Enter your email address"
+                    autoComplete="email"
                     required
                     style={{
                       width: "100%",
                       padding: "14px",
-                      borderRadius: "10px",
+                      borderRadius:
+                        "10px",
                       border:
                         "1px solid #dbe2ea",
                       fontSize: "15px",
@@ -1033,26 +1915,20 @@ function CandidateInterviewPage() {
                         "border-box",
                     }}
                   />
-
                 </div>
-
               </div>
 
               {mediaError && (
-
                 <div
                   className="media-error"
                   style={{
                     marginTop: "16px",
                   }}
                 >
-
                   <HiOutlineExclamationCircle />
 
                   {mediaError}
-
                 </div>
-
               )}
 
               <div
@@ -1063,7 +1939,6 @@ function CandidateInterviewPage() {
                     "flex-end",
                 }}
               >
-
                 <button
                   type="submit"
                   className="next-question-button"
@@ -1071,7 +1946,6 @@ function CandidateInterviewPage() {
                     registeringCandidate
                   }
                 >
-
                   {registeringCandidate
                     ? "Registering..."
                     : "Start Interview"}
@@ -1079,65 +1953,45 @@ function CandidateInterviewPage() {
                   {!registeringCandidate && (
                     <HiOutlineArrowRight />
                   )}
-
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </section>
-
       </main>
     );
   }
 
-  /*
-   * ============================================================
-   * QUESTION TYPE
-   * ============================================================
-   */
+  // ============================================================
+  // VIDEO RECORDING DATA
+  // ============================================================
 
-  const questionType =
-    question?.questionType?.toLowerCase();
+  const currentRecording =
+    recordings[currentQuestion];
 
-  const isVideo =
-    questionType === "video";
+  const currentRecordingUrl =
+    currentRecording?.videoUrl;
 
-  const isText =
-    questionType === "text";
-
-  const isMultipleChoice =
-    questionType ===
-    "multiple choice";
-
-  /*
-   * ============================================================
-   * RENDER INTERVIEW
-   * ============================================================
-   */
+  // ============================================================
+  // MAIN INTERVIEW UI
+  // ============================================================
 
   return (
     <main className="candidate-interview-page">
-
-      {/* HEADER */}
+      {/* ======================================================
+          HEADER
+      ====================================================== */}
 
       <header className="candidate-interview-header">
-
         <div className="candidate-interview-brand">
-
           <h1>Covira</h1>
 
           <span>
             Candidate Interview
           </span>
-
         </div>
 
         <div className="candidate-interview-progress">
-
           <span>
             Question{" "}
             {currentQuestion + 1} of{" "}
@@ -1145,7 +1999,6 @@ function CandidateInterviewPage() {
           </span>
 
           <div className="progress-bar">
-
             <div
               className="progress-bar-fill"
               style={{
@@ -1156,17 +2009,15 @@ function CandidateInterviewPage() {
                 }%`,
               }}
             />
-
           </div>
-
         </div>
-
       </header>
 
-      {/* INTERVIEW INFORMATION */}
+      {/* ======================================================
+          INTERVIEW INFORMATION
+      ====================================================== */}
 
       <section className="candidate-interview-intro">
-
         <h1>
           {interview?.title ||
             "Interview"}
@@ -1195,17 +2046,18 @@ function CandidateInterviewPage() {
             {candidateName}
           </strong>
         </div>
-
       </section>
 
-      {/* MAIN INTERVIEW */}
+      {/* ======================================================
+          MAIN INTERVIEW
+      ====================================================== */}
 
       <section className="candidate-interview-content">
-
-        {/* QUESTION */}
+        {/* ====================================================
+            QUESTION
+        ==================================================== */}
 
         <div className="candidate-question-card">
-
           <span className="question-number">
             Question{" "}
             {currentQuestion + 1}
@@ -1230,7 +2082,6 @@ function CandidateInterviewPage() {
               flexWrap: "wrap",
             }}
           >
-
             <span>
               Type:{" "}
               {question.questionType}
@@ -1240,16 +2091,18 @@ function CandidateInterviewPage() {
               <span>
                 Time:{" "}
                 {formatTime(
-                  question.timeLimit
+                  Number(
+                    question.timeLimit
+                  )
                 )}
               </span>
             )}
-
           </div>
-
         </div>
 
-        {/* TIMER */}
+        {/* ====================================================
+            TIMER
+        ==================================================== */}
 
         {timeRemaining !== null && (
           <div
@@ -1266,16 +2119,14 @@ function CandidateInterviewPage() {
           </div>
         )}
 
-        {/* VIDEO QUESTION */}
+        {/* ====================================================
+            VIDEO QUESTION
+        ==================================================== */}
 
         {isVideo && (
-
           <div className="candidate-recording-card">
-
             <div className="recording-header">
-
               <div>
-
                 <h2>
                   Your Video Response
                 </h2>
@@ -1284,7 +2135,6 @@ function CandidateInterviewPage() {
                   Record your answer using
                   your camera and microphone.
                 </p>
-
               </div>
 
               {recording && (
@@ -1293,26 +2143,30 @@ function CandidateInterviewPage() {
                 </span>
               )}
 
+              {isUploadingCurrentQuestion && (
+                <span className="recording-indicator">
+                  Uploading{" "}
+                  {uploadProgress}%
+                </span>
+              )}
             </div>
 
+            {/* ==================================================
+                VIDEO
+            ================================================== */}
+
             <div className="video-container">
-
-              {recordings[
-                currentQuestion
-              ] && !recording ? (
-
+              {currentRecordingUrl &&
+              !recording ? (
                 <video
                   controls
+                  playsInline
                   className="recorded-video"
                   src={
-                    recordings[
-                      currentQuestion
-                    ].videoUrl
+                    currentRecordingUrl
                   }
                 />
-
               ) : (
-
                 <video
                   ref={videoRef}
                   autoPlay
@@ -1320,16 +2174,12 @@ function CandidateInterviewPage() {
                   playsInline
                   className="candidate-camera"
                 />
-
               )}
 
               {!cameraReady &&
-                !recordings[
-                  currentQuestion
-                ] && (
-
+                !currentRecording &&
+                !recording && (
                   <div className="camera-overlay">
-
                     <HiOutlineVideoCamera />
 
                     <h3>
@@ -1340,66 +2190,157 @@ function CandidateInterviewPage() {
                       Enable your camera and
                       microphone to continue.
                     </p>
-
                   </div>
-
                 )}
-
             </div>
 
-            {mediaError && (
+            {/* ==================================================
+                UPLOAD PROGRESS
+            ================================================== */}
 
-              <div className="media-error">
+            {isUploadingCurrentQuestion && (
+              <div
+                style={{
+                  marginTop: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    marginBottom: "6px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <span>
+                    Uploading video...
+                  </span>
 
-                <HiOutlineExclamationCircle />
+                  <span>
+                    {uploadProgress}%
+                  </span>
+                </div>
 
-                {mediaError}
-
+                <div
+                  style={{
+                    width: "100%",
+                    height: "8px",
+                    borderRadius:
+                      "999px",
+                    background:
+                      "#e5e7eb",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${uploadProgress}%`,
+                      height: "100%",
+                      background:
+                        "#2563eb",
+                      transition:
+                        "width 0.2s ease",
+                    }}
+                  />
+                </div>
               </div>
-
             )}
 
+            {/* ==================================================
+                SUCCESS
+            ================================================== */}
+
+            {currentRecording?.uploaded && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  padding:
+                    "10px 14px",
+                  borderRadius: "8px",
+                  background:
+                    "#dcfce7",
+                  color: "#166534",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                Video uploaded successfully.
+              </div>
+            )}
+
+            {/* ==================================================
+                ERROR
+            ================================================== */}
+
+            {currentRecording?.uploadFailed && (
+              <div
+                className="media-error"
+                style={{
+                  marginTop: "12px",
+                }}
+              >
+                <HiOutlineExclamationCircle />
+
+                <span>
+                  Video upload failed.
+                  Please record again.
+                </span>
+              </div>
+            )}
+
+            {mediaError && (
+              <div className="media-error">
+                <HiOutlineExclamationCircle />
+
+                <span>
+                  {mediaError}
+                </span>
+              </div>
+            )}
+
+            {/* ==================================================
+                RECORDING CONTROLS
+            ================================================== */}
+
             <div className="recording-controls">
+              {!cameraReady &&
+                !currentRecording && (
+                  <button
+                    type="button"
+                    className="camera-button"
+                    onClick={
+                      startCamera
+                    }
+                  >
+                    <HiOutlineVideoCamera />
 
-              {!cameraReady && (
-
-                <button
-                  type="button"
-                  className="camera-button"
-                  onClick={startCamera}
-                >
-                  <HiOutlineVideoCamera />
-
-                  Enable Camera
-
-                </button>
-
-              )}
+                    Enable Camera
+                  </button>
+                )}
 
               {cameraReady &&
                 !recording &&
-                !recordings[
-                  currentQuestion
-                ] && (
-
+                !currentRecording && (
                   <button
                     type="button"
                     className="record-button"
                     onClick={
                       startRecording
                     }
+                    disabled={
+                      isUploadingCurrentQuestion ||
+                      submitting
+                    }
                   >
-
                     <HiOutlineMicrophone />
 
                     Start Recording
-
                   </button>
-
                 )}
 
               {recording && (
-
                 <button
                   type="button"
                   className="stop-record-button"
@@ -1407,78 +2348,40 @@ function CandidateInterviewPage() {
                     stopRecording
                   }
                 >
-
                   <HiOutlineStop />
 
                   Stop Recording
-
                 </button>
-
               )}
 
-              {recordings[
-                currentQuestion
-              ] &&
+              {currentRecording &&
                 !recording && (
-
                   <button
                     type="button"
                     className="record-again-button"
-                    onClick={() => {
-
-                      const existing =
-                        recordings[
-                          currentQuestion
-                        ];
-
-                      if (
-                        existing?.videoUrl
-                      ) {
-                        URL.revokeObjectURL(
-                          existing.videoUrl
-                        );
-                      }
-
-                      setRecordings(
-                        (previous) => {
-
-                          const updated = {
-                            ...previous,
-                          };
-
-                          delete updated[
-                            currentQuestion
-                          ];
-
-                          return updated;
-                        }
-                      );
-
-                    }}
+                    onClick={
+                      recordAgain
+                    }
+                    disabled={
+                      isUploadingCurrentQuestion ||
+                      submitting
+                    }
                   >
-
                     Record Again
-
                   </button>
-
                 )}
-
             </div>
-
           </div>
-
         )}
 
-        {/* TEXT QUESTION */}
+        {/* ====================================================
+            TEXT QUESTION
+        ==================================================== */}
 
         {isText && (
-
           <div className="candidate-recording-card">
-
             <div className="recording-header">
-
               <div>
-
                 <h2>
                   Your Answer
                 </h2>
@@ -1486,9 +2389,7 @@ function CandidateInterviewPage() {
                 <p>
                   Type your answer below.
                 </p>
-
               </div>
-
             </div>
 
             <textarea
@@ -1515,31 +2416,25 @@ function CandidateInterviewPage() {
             />
 
             {mediaError && (
-
               <div className="media-error">
-
                 <HiOutlineExclamationCircle />
 
-                {mediaError}
-
+                <span>
+                  {mediaError}
+                </span>
               </div>
-
             )}
-
           </div>
-
         )}
 
-        {/* MULTIPLE CHOICE */}
+        {/* ====================================================
+            MULTIPLE CHOICE
+        ==================================================== */}
 
         {isMultipleChoice && (
-
           <div className="candidate-recording-card">
-
             <div className="recording-header">
-
               <div>
-
                 <h2>
                   Select Your Answer
                 </h2>
@@ -1548,9 +2443,7 @@ function CandidateInterviewPage() {
                   Choose the answer that
                   best applies.
                 </p>
-
               </div>
-
             </div>
 
             <div
@@ -1559,28 +2452,27 @@ function CandidateInterviewPage() {
                 gap: "12px",
               }}
             >
-
               {[
                 "Option A",
                 "Option B",
                 "Option C",
                 "Option D",
               ].map((option) => (
-
                 <label
                   key={option}
                   style={{
                     display: "flex",
-                    alignItems: "center",
+                    alignItems:
+                      "center",
                     gap: "10px",
                     padding: "14px",
                     border:
                       "1px solid #e2e8f0",
-                    borderRadius: "10px",
+                    borderRadius:
+                      "10px",
                     cursor: "pointer",
                   }}
                 >
-
                   <input
                     type="radio"
                     name={`question-${currentQuestion}`}
@@ -1596,33 +2488,27 @@ function CandidateInterviewPage() {
                   />
 
                   {option}
-
                 </label>
-
               ))}
-
             </div>
 
             {mediaError && (
-
               <div className="media-error">
-
                 <HiOutlineExclamationCircle />
 
-                {mediaError}
-
+                <span>
+                  {mediaError}
+                </span>
               </div>
-
             )}
-
           </div>
-
         )}
 
-        {/* NAVIGATION */}
+        {/* ====================================================
+            NAVIGATION
+        ==================================================== */}
 
         <div className="candidate-question-navigation">
-
           <button
             type="button"
             className="previous-question-button"
@@ -1630,21 +2516,20 @@ function CandidateInterviewPage() {
               previousQuestion
             }
             disabled={
-              currentQuestion === 0 ||
+              currentQuestion ===
+                0 ||
               recording ||
-              submitting
+              submitting ||
+              isUploadingCurrentQuestion
             }
           >
-
             <HiOutlineArrowLeft />
 
             Previous
-
           </button>
 
           {currentQuestion <
           questions.length - 1 ? (
-
             <button
               type="button"
               className="next-question-button"
@@ -1654,25 +2539,27 @@ function CandidateInterviewPage() {
               disabled={
                 recording ||
                 submitting ||
+                isUploadingCurrentQuestion ||
                 (question.required &&
                   !hasAnswer())
               }
             >
+              {isUploadingCurrentQuestion
+                ? `Uploading ${uploadProgress}%...`
+                : "Next Question"}
 
-              Next Question
-
-              <HiOutlineArrowRight />
-
+              {!isUploadingCurrentQuestion && (
+                <HiOutlineArrowRight />
+              )}
             </button>
-
           ) : (
-
             <button
               type="button"
               className="submit-interview-button"
               disabled={
                 recording ||
                 submitting ||
+                isUploadingCurrentQuestion ||
                 (question.required &&
                   !hasAnswer())
               }
@@ -1680,21 +2567,17 @@ function CandidateInterviewPage() {
                 submitInterview
               }
             >
-
               <HiOutlineCheckCircle />
 
               {submitting
                 ? "Submitting..."
+                : isUploadingCurrentQuestion
+                ? `Uploading ${uploadProgress}%...`
                 : "Submit Interview"}
-
             </button>
-
           )}
-
         </div>
-
       </section>
-
     </main>
   );
 }
