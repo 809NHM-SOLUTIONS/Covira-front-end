@@ -16,7 +16,7 @@ import {
   HiOutlineDocumentText,
 } from "react-icons/hi2";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "http://localhost:8081";
 
 function CandidateDetailsPage() {
   const { id } = useParams();
@@ -314,7 +314,7 @@ function CandidateDetailsPage() {
    *
    * uploads/video.webm
    *
-   * http://localhost:8080/uploads/video.webm
+   * http://localhost:8081/uploads/video.webm
    *
    * https://example.com/video.webm
    *

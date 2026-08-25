@@ -17,7 +17,7 @@ import {
 } from "react-icons/fa";
 
 const PROFILE_API_URL =
-  "http://localhost:8080/api/employer/profile";
+  "http://localhost:8081/api/employer/profile";
 
 function DashboardLayout() {
   const navigate = useNavigate();
@@ -259,7 +259,7 @@ function DashboardLayout() {
     try {
 
       await fetch(
-        "http://localhost:8080/api/auth/logout",
+        "http://localhost:8081/api/auth/logout",
         {
           method: "POST",
           credentials: "include",
@@ -284,15 +284,23 @@ function DashboardLayout() {
 
     await Swal.fire({
 
-      icon: "success",
-
-      title: "Logged Out",
-
-      text: "You have been logged out successfully.",
-
-      timer: 1500,
-
+      html: `
+        <div class="covira-swal">
+          <div class="covira-swal-badge">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17l-5-5" stroke="#00A99D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>Logged Out</h2>
+          <p>You've been signed out successfully.</p>
+        </div>
+      `,
       showConfirmButton: false,
+      timer: 1500,
+      background: "#ffffff",
+      customClass: {
+        popup: "covira-swal-popup",
+      },
 
     });
 

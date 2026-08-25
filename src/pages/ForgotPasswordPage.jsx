@@ -20,7 +20,7 @@ function ForgotPasswordPage() {
         try {
 
             const response = await fetch(
-                "http://localhost:8080/api/auth/forgot-password",
+                "http://localhost:8081/api/auth/forgot-password",
                 {
                     method: "POST",
                     headers: {

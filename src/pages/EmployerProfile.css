@@ -185,4 +185,76 @@
   .profile-secondary-button {
     width: 100%;
   }
+  .password-card {
+  margin-top: 22px;
+}
+
+.password-card-header {
+  margin-bottom: 22px;
+}
+
+.password-card-header h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.password-card-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.password-match {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.password-match.success {
+  color: #027a48;
+}
+
+.password-match.error {
+  color: #d92d20;
+}
+
+.otp-instructions {
+  margin: 0 0 18px;
+  color: #667085;
+  font-size: 14px;
+}
+
+.otp-timer {
+  font-weight: 700;
+  color: #7f56d9;
+}
+
+.otp-timer.expired {
+  color: #d92d20;
+}
+
+.otp-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.otp-container input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: none;
+}
+
+.otp-container input:focus {
+  border-color: #7f56d9;
+  box-shadow: 0 0 0 4px rgba(127, 86, 217, 0.12);
+}
+
+.otp-actions {
+  flex-wrap: wrap;
+}
 }

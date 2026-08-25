@@ -436,7 +436,7 @@ function CreateInterviewPage() {
 
             const interviewResponse =
                 await fetch(
-                    "http://localhost:8080/api/interviews",
+                    "http://localhost:8081/api/interviews",
                     {
                         method: "POST",
 
@@ -552,7 +552,7 @@ function CreateInterviewPage() {
 
                 const questionResponse =
                     await fetch(
-                        `http://localhost:8080/api/interviews/${interviewId}/questions`,
+                        `http://localhost:8081/api/interviews/${interviewId}/questions`,
                         {
                             method: "POST",
 

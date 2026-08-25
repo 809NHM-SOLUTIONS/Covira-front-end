@@ -27,7 +27,7 @@ function LoginPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        "http://localhost:8081/api/auth/login",
         {
           method: "POST",
           headers: {
@@ -41,22 +41,33 @@ function LoginPage() {
         }
       );
 
-      const message = await response.text();
-
       if (response.ok) {
+        const data = await response.json();
+
         await Swal.fire({
-          icon: "success",
-          title: "Welcome Back!",
-          text: message,
-          confirmButtonColor: "#00A99D",
-          background: "#ffffff",
-          color: "#333",
-          timer: 1800,
+          html: `
+            <div class="covira-swal">
+              <div class="covira-swal-badge">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="#00A99D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h2>Welcome back, ${data.fullName.split(" ")[0]}</h2>
+              <p>Signed in to <strong>${data.companyName}</strong></p>
+            </div>
+          `,
           showConfirmButton: false,
+          timer: 1800,
+          background: "#ffffff",
+          customClass: {
+            popup: "covira-swal-popup",
+          },
         });
 
         navigate("/dashboard");
       } else {
+        const message = await response.text();
+
         Swal.fire({
           icon: "error",
           title: "Login Failed",
