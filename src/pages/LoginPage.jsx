@@ -33,10 +33,7 @@ function LoginPage() {
           headers: {
             "Content-Type": "application/json",
           },
-
-          // Important: saves and sends the backend session cookie
           credentials: "include",
-
           body: JSON.stringify(loginData),
         }
       );
@@ -44,10 +41,42 @@ function LoginPage() {
       const message = await response.text();
 
       if (response.ok) {
+
+        // =====================================================
+        // SAVE LOGGED-IN USER INFORMATION
+        // CreateInterviewPage uses this email to load questions
+        // =====================================================
+
+        localStorage.setItem(
+          "userEmail",
+          loginData.email.trim().toLowerCase()
+        );
+
+        localStorage.setItem(
+          "email",
+          loginData.email.trim().toLowerCase()
+        );
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            email: loginData.email.trim().toLowerCase(),
+          })
+        );
+
+        console.log(
+          "Logged-in employer email:",
+          loginData.email.trim().toLowerCase()
+        );
+
+        // =====================================================
+        // SUCCESS MESSAGE
+        // =====================================================
+
         await Swal.fire({
           icon: "success",
           title: "Welcome Back!",
-          text: message,
+          text: message || "Login successful.",
           confirmButtonColor: "#00A99D",
           background: "#ffffff",
           color: "#333",
@@ -56,15 +85,21 @@ function LoginPage() {
         });
 
         navigate("/dashboard");
+
       } else {
+
         Swal.fire({
           icon: "error",
           title: "Login Failed",
-          text: message || "Invalid email address or password.",
+          text:
+            message ||
+            "Invalid email address or password.",
           confirmButtonColor: "#00A99D",
         });
       }
+
     } catch (error) {
+
       console.error("Login error:", error);
 
       Swal.fire({
@@ -73,15 +108,21 @@ function LoginPage() {
         text: "Unable to connect to the server.",
         confirmButtonColor: "#00A99D",
       });
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
   return (
     <div className="register-page">
+
       <div className="register-left">
+
         <div className="brand">
+
           <Link to="/">
             <img
               src="/covira_tranperant.png"
@@ -91,8 +132,11 @@ function LoginPage() {
 
           <div>
             <h1>Beyond Resumes</h1>
-            <span>See the person behind the CV</span>
+            <span>
+              See the person behind the CV
+            </span>
           </div>
+
         </div>
 
         <span className="tag">
@@ -104,11 +148,13 @@ function LoginPage() {
         </h1>
 
         <p>
-          Sign in to access your dashboard, manage interviews and
-          review candidate submissions.
+          Sign in to access your dashboard,
+          manage interviews and review candidate
+          submissions.
         </p>
 
         <div className="dashboard-preview">
+
           <div className="preview-header">
             Interview Analytics
           </div>
@@ -118,18 +164,27 @@ function LoginPage() {
           <div className="preview-score">
             Candidate Match Score: 92%
           </div>
+
         </div>
+
       </div>
 
+
       <div className="register-right">
+
         <div className="register-card">
-          <Link to="/" className="back-home">
+
+          <Link
+            to="/"
+            className="back-home"
+          >
             ← Back to Home
           </Link>
 
           <h3>Sign In</h3>
 
           <form onSubmit={handleSubmit}>
+
             <input
               type="email"
               name="email"
@@ -151,27 +206,44 @@ function LoginPage() {
             />
 
             <div className="login-options">
+
               <label>
-                <input type="checkbox" />
+                <input
+                  type="checkbox"
+                />
                 Remember Me
               </label>
 
               <Link to="/forgot-password">
                 Forgot Password?
               </Link>
+
             </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+            <button
+              type="submit"
+              disabled={loading}
+            >
+              {loading
+                ? "Signing In..."
+                : "Sign In"}
             </button>
+
           </form>
 
           <p className="login-link">
             Don&apos;t have an account?
-            <Link to="/register"> Create Account</Link>
+
+            <Link to="/register">
+              {" "}Create Account
+            </Link>
+
           </p>
+
         </div>
+
       </div>
+
     </div>
   );
 }
