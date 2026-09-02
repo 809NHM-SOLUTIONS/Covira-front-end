@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./EmployerProfile.css";
 import AlertModal from "../components/AlertModal";
 import PasswordRequirements from "../components/PasswordRequirements";
-
+import { setUnsavedChanges } from "../styles/utils/unsavedChangesGuard";
 
 const API_URL = "http://localhost:8081/api/employer/profile";
 const CHANGE_PASSWORD_REQUEST_URL = "http://localhost:8081/api/employer/profile/change-password/request";
@@ -72,6 +72,17 @@ function ChangePasswordSection() {
     return () => clearInterval(timerRef.current);
   }, [step]);
 
+  useEffect(() => {
+    const hasTypedSomething =
+      passwordForm.currentPassword ||
+      passwordForm.newPassword ||
+      passwordForm.confirmPassword;
+
+    setUnsavedChanges(step === "otp" || Boolean(hasTypedSomething));
+
+    return () => setUnsavedChanges(false);
+  }, [step, passwordForm]);
+
   const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -136,7 +147,7 @@ function ChangePasswordSection() {
       const message = await response.text();
 
       if (!response.ok) {
-        // e.g. current password incorrect — surface it against the field too
+        // e.g. current password incorrect - surface it against the field too
         setPasswordErrors((current) => ({
           ...current,
           currentPassword: message || "Unable to verify current password.",
@@ -212,7 +223,7 @@ function ChangePasswordSection() {
         return;
       }
 
-      // Password changed successfully — force re-login for security.
+      // Password changed successfully - force re-login for security.
       showAlert(
         "success",
         "Password Updated",
@@ -224,13 +235,15 @@ function ChangePasswordSection() {
               credentials: "include",
             });
           } catch (error) {
-            // Non-fatal — we still clear local state and redirect below.
+            // Non-fatal - we still clear local state and redirect below.
           }
           localStorage.clear();
           sessionStorage.clear();
           window.location.href = "/login";
         }
       );
+ setUnsavedChanges(false);
+
     } catch (error) {
       showAlert("error", "Connection Error", "Unable to connect to the server. Please try again.");
     } finally {
@@ -269,6 +282,7 @@ function ChangePasswordSection() {
     setStep("form");
     setOtp(["", "", "", "", "", ""]);
     setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+   setUnsavedChanges(false);
   };
 
   return (
