@@ -6,7 +6,8 @@ import {
     HiOutlineQuestionMarkCircle,
     HiOutlinePlus,
     HiOutlinePencilSquare,
-    HiOutlineTrash
+    HiOutlineTrash,
+    HiOutlineLockClosed
 } from "react-icons/hi2";
 
 const API_BASE_URL = "http://localhost:8081";
@@ -25,6 +26,8 @@ function QuestionsPage() {
 
     const [saving, setSaving] = useState(false);
 
+    const [locked, setLocked] = useState(false);
+
     const [newQuestion, setNewQuestion] = useState({
         text: "",
         type: "Video",
@@ -34,10 +37,44 @@ function QuestionsPage() {
 
 
     /*
-     * ============================================================
-     * LOAD QUESTIONS
-     * ============================================================
+      LOAD LOCK STATUS
+     An interview locks the moment any candidate has completed it -
+      questions become view-only from then on.
      */
+
+    const loadLockStatus = async () => {
+
+        if (!interviewId) {
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                `${API_BASE_URL}/api/interviews/${interviewId}/questions/locked`,
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            setLocked(Boolean(data.locked));
+
+        } catch (err) {
+            // Non-fatal - worst case, the user finds out when they try
+            // to add/delete and the backend rejects it with a clear message.
+        }
+
+    };
+
+
+    /* LOAD QUESTIONS */
 
     const loadQuestions = async () => {
 
@@ -139,6 +176,7 @@ function QuestionsPage() {
     useEffect(() => {
 
         loadQuestions();
+        loadLockStatus();
 
     }, [interviewId]);
 
@@ -251,6 +289,13 @@ function QuestionsPage() {
      */
 
     const addQuestion = async () => {
+
+        if (locked) {
+            setError(
+                "This interview has candidate submissions and can no longer be edited."
+            );
+            return;
+        }
 
         if (!newQuestion.text.trim()) {
 
@@ -386,6 +431,13 @@ function QuestionsPage() {
 
     const deleteQuestion = async (id) => {
 
+        if (locked) {
+            setError(
+                "This interview has candidate submissions and can no longer be edited."
+            );
+            return;
+        }
+
         const confirmed = window.confirm(
             "Are you sure you want to delete this question?"
         );
@@ -495,7 +547,8 @@ function QuestionsPage() {
                         setShowForm(true);
 
                     }}
-                    disabled={loading}
+                    disabled={loading || locked}
+                    title={locked ? "This interview can no longer be edited" : undefined}
                 >
 
                     <HiOutlinePlus />
@@ -505,6 +558,29 @@ function QuestionsPage() {
                 </button>
 
             </div>
+
+
+            {/* =====================================================
+                LOCKED BANNER
+            ====================================================== */}
+
+            {locked && (
+
+                <div className="questions-locked-banner">
+
+                    <HiOutlineLockClosed />
+
+                    <div>
+                        <h3>This interview is locked</h3>
+                        <p>
+                          This interview has been completed, so its questions can no longer be modified. You can still view them below.
+
+                        </p>
+                    </div>
+
+                </div>
+
+            )}
 
 
             {/* =====================================================
@@ -552,7 +628,7 @@ function QuestionsPage() {
                 QUESTION FORM
             ====================================================== */}
 
-            {showForm && (
+            {showForm && !locked && (
 
                 <div className="question-form-card">
 
@@ -811,16 +887,20 @@ function QuestionsPage() {
                                 during this interview.
                             </p>
 
-                            <button
-                                className="add-question-btn"
-                                onClick={() => setShowForm(true)}
-                            >
+                            {!locked && (
 
-                                <HiOutlinePlus />
+                                <button
+                                    className="add-question-btn"
+                                    onClick={() => setShowForm(true)}
+                                >
 
-                                Add Your First Question
+                                    <HiOutlinePlus />
 
-                            </button>
+                                    Add Your First Question
+
+                                </button>
+
+                            )}
 
                         </div>
 
@@ -905,8 +985,9 @@ function QuestionsPage() {
 
 
                                             <button
-                                                title="Delete question"
+                                                title={locked ? "This interview can no longer be edited" : "Delete question"}
                                                 type="button"
+                                                disabled={locked}
                                                 onClick={() =>
                                                     deleteQuestion(
                                                         question.id
