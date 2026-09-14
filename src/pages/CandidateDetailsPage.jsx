@@ -2,6 +2,8 @@ import "../styles/CandidateDetailsPage.css";
 
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { DATE_LOCALE } from "../styles/utils/dateFormat";
+
 
 import {
   HiOutlineArrowLeft,
@@ -28,6 +30,10 @@ function CandidateDetailsPage() {
   const [error, setError] = useState("");
 
   const [videoErrors, setVideoErrors] = useState({});
+
+  const [decisionLoading, setDecisionLoading] = useState(false);
+
+  const [decisionError, setDecisionError] = useState("");
 
   /*
    * =========================================================
@@ -487,7 +493,7 @@ function CandidateDetailsPage() {
       }
 
       return date.toLocaleDateString(
-        "en-ZA",
+         DATE_LOCALE,
         {
           day: "2-digit",
           month: "short",
@@ -509,6 +515,70 @@ function CandidateDetailsPage() {
     return String(status || "unknown")
       .toLowerCase()
       .replace(/\s+/g, "-");
+  };
+
+  /*
+   * =========================================================
+   * RECORD DECISION (SHORTLIST / REJECT)
+   * =========================================================
+   */
+
+  const handleDecision = async (decision) => {
+    if (!candidate || decisionLoading) {
+      return;
+    }
+
+    setDecisionLoading(true);
+    setDecisionError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/candidates/${id}/decision`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ decision }),
+        }
+      );
+
+      const responseText = await response.text();
+
+      let data = null;
+
+      try {
+        data = responseText
+          ? JSON.parse(responseText)
+          : null;
+      } catch {
+        data = responseText;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data === "string" && data.trim()
+            ? data
+            : "Failed to record decision."
+        );
+      }
+
+      setCandidate(data);
+    } catch (err) {
+      console.error(
+        "Error recording candidate decision:",
+        err
+      );
+
+      setDecisionError(
+        err?.message ||
+          "Unable to record decision right now."
+      );
+    } finally {
+      setDecisionLoading(false);
+    }
   };
 
   /*
@@ -665,6 +735,58 @@ function CandidateDetailsPage() {
       </div>
 
       {/* =====================================================
+          REVIEW DECISION
+      ===================================================== */}
+
+      {!isPending && (
+        <div className="candidate-decision-card">
+
+          {status === "Shortlisted" || status === "Rejected" ? (
+            <p className="candidate-decision-note">
+              {status === "Shortlisted"
+                ? "This candidate has been shortlisted. They've been notified by email."
+                : "This candidate has been rejected. They've been notified by email."}
+            </p>
+          ) : (
+            <>
+              <p className="candidate-decision-note">
+                Record a hiring decision for this candidate.
+              </p>
+
+              <div className="candidate-decision-actions">
+                <button
+                  type="button"
+                  className="candidate-decision-btn shortlist"
+                  disabled={decisionLoading}
+                  onClick={() => handleDecision("SHORTLIST")}
+                >
+                  <HiOutlineCheckCircle />
+                  Shortlist
+                </button>
+
+                <button
+                  type="button"
+                  className="candidate-decision-btn reject"
+                  disabled={decisionLoading}
+                  onClick={() => handleDecision("REJECT")}
+                >
+                  <HiOutlineExclamationCircle />
+                  Reject
+                </button>
+              </div>
+            </>
+          )}
+
+          {decisionError && (
+            <p className="candidate-decision-error">
+              {decisionError}
+            </p>
+          )}
+
+        </div>
+      )}
+
+      {/* =====================================================
           CANDIDATE INFORMATION
       ===================================================== */}
 
@@ -749,6 +871,7 @@ function CandidateDetailsPage() {
             label="Submitted"
             value={
               formatDate(
+                 candidate.submittedAtIso ||
                 candidate.submittedAt ||
                   candidate.completedAt ||
                   candidate.createdAt

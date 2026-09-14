@@ -537,7 +537,7 @@ a:focus {
   left: 0;
   width: 4px;
   height: 100%;
-  background: #00A99D;
+  background: linear-gradient(180deg, #243B8F 0%, #00A99D 100%);
 }
 
 .card h3 {
@@ -552,13 +552,16 @@ a:focus {
 .card h2 {
   font-size: 32px;
   font-weight: 700;
-  color: #101828;
+  background: linear-gradient(135deg, #243B8F 0%, #00A99D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
 
 .card:hover h2 {
-  color: #00A99D;
+  filter: brightness(1.1);
 }
 
 .card span {

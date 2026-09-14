@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "../styles/DashboardPage.css";
+import { DEFAULT_TIMEZONE } from "../styles/utils/timezoneOptions";
+
 
 import {
   FaPlusCircle,
@@ -246,9 +248,11 @@ function DashboardPage() {
                 </div>
 
                 <div className="recent-interview-meta">
-                  <span className={`status-badge status-${(interview.status || "").toLowerCase()}`}>
-                    {interview.status}
-                  </span>
+                   {interview.status && interview.status !== "Draft" && (
+        <span className={`status-badge status-${interview.status.toLowerCase()}`}>
+            {interview.status}
+        </span>
+    )}
                   <span>{interview.questionCount} question{interview.questionCount === 1 ? "" : "s"}</span>
                   <span>
                     {interview.completedResponseCount}/{interview.candidateCount} responded

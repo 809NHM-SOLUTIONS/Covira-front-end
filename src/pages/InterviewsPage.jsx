@@ -465,26 +465,7 @@ function InterviewsPage() {
 
                   {/* Status */}
 
-                  <span
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "20px",
-                      background:
-                        interview.status === "Active"
-                          ? "#dcfce7"
-                          : "#fef3c7",
-                      color:
-                        interview.status === "Active"
-                          ? "#166534"
-                          : "#92400e",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                    }}
-                  >
-
-                    {interview.status || "Draft"}
-
-                  </span>
+                  
 
                 </div>
 

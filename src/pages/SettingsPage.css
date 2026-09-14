@@ -152,7 +152,8 @@
   font-size: 14px;
 }
 
-.settings-field select {
+.settings-field select,
+.settings-field input {
   width: 100%;
   max-width: 360px;
   padding: 10px 12px;
@@ -160,6 +161,19 @@
   border-radius: 10px;
   font-size: 14px;
   background: #ffffff;
+}
+
+.settings-field select:disabled,
+.settings-field input:disabled {
+  background: #f2f4f7;
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
+.settings-field-error {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #b3261e;
 }
 
 .settings-secondary-button {

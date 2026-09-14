@@ -40,6 +40,9 @@ body {
   justify-content: center;
   margin-bottom: 16px;
 }
+.covira-swal-badge-error {
+  background: #fdeaea;
+}
 
 .covira-swal h2 {
   margin: 0 0 6px;

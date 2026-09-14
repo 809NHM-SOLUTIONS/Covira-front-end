@@ -204,6 +204,13 @@ function CandidatesPage() {
             <option value="Reviewed">
               Reviewed
             </option>
+              <option value="Shortlisted">
+              Shortlisted
+            </option>
+
+            <option value="Rejected">
+              Rejected
+            </option>
           </select>
 
         </div>

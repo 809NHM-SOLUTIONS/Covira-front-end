@@ -1751,7 +1751,18 @@ function CandidateInterviewPage() {
 
           <p>
             Your responses have been
-            successfully recorded.
+            successfully recorded and are
+            now under review by the
+            employer.
+          </p>
+
+          <p>
+            A confirmation has also been
+            sent to your email. If you
+            haven&apos;t heard back within
+            15 days, please consider your
+            application unsuccessful for
+            this role.
           </p>
         </div>
       </main>

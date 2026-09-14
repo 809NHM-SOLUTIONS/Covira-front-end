@@ -3,6 +3,35 @@ import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function showLoginError(title, message) {
+  return Swal.fire({
+    html: `
+      <div class="covira-swal">
+        <div class="covira-swal-badge covira-swal-badge-error">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M6 6l12 12M18 6L6 18" stroke="#E0433D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(message)}</p>
+      </div>
+    `,
+    confirmButtonText: "Try Again",
+    confirmButtonColor: "#00A99D",
+    background: "#ffffff",
+    customClass: {
+      popup: "covira-swal-popup",
+    },
+  });
+}
+
 function LoginPage() {
   const navigate = useNavigate();
 
@@ -28,7 +57,7 @@ function LoginPage() {
     try {
       const response = await fetch(
         "http://localhost:8081/api/auth/login",
-        "http://localhost:8081/api/auth/login",
+      
         {
           method: "POST",
           headers: {
@@ -67,26 +96,20 @@ function LoginPage() {
       } else {
         const message = await response.text();
 
-        Swal.fire({
-          icon: "error",
-          title: "Login Failed",
-          text:
-            message ||
-            "Invalid email address or password.",
-          confirmButtonColor: "#00A99D",
-        });
+        showLoginError(
+          "Login Failed",
+          message || "Invalid email address or password."
+        );
       }
 
     } catch (error) {
 
       console.error("Login error:", error);
 
-      Swal.fire({
-        icon: "error",
-        title: "Connection Error",
-        text: "Unable to connect to the server.",
-        confirmButtonColor: "#00A99D",
-      });
+      showLoginError(
+        "Connection Error",
+        "Unable to connect to the server."
+      );
 
     } finally {
 

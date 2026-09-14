@@ -163,6 +163,15 @@
 
     color: #3154b8;
 }
+.details-status-shortlisted {
+    background: #e6f7ef;
+    color: #16834b;
+}
+
+.details-status-rejected {
+    background: #fde8e8;
+    color: #b3261e;
+}
 
 
 /* ==========================================
@@ -780,7 +789,83 @@
     background: #e9edff;
     color: #3154b8;
 }
+.candidate-profile-card .status-shortlisted {
+    background: #e6f7ef;
+    color: #16834b;
+}
 
+.candidate-profile-card .status-rejected {
+    background: #fde8e8;
+    color: #b3261e;
+}
+
+.candidate-decision-card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
+    margin-bottom: 25px;
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.candidate-decision-note {
+    margin: 0;
+    color: #444;
+    font-size: 14px;
+}
+
+.candidate-decision-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.candidate-decision-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.candidate-decision-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.candidate-decision-btn.shortlist {
+    background: #16834b;
+    color: #ffffff;
+}
+
+.candidate-decision-btn.shortlist:hover:not(:disabled) {
+    background: #126b3d;
+}
+
+.candidate-decision-btn.reject {
+    background: #fde8e8;
+    color: #b3261e;
+}
+
+.candidate-decision-btn.reject:hover:not(:disabled) {
+    background: #fad2d2;
+}
+
+.candidate-decision-error {
+    width: 100%;
+    margin: 0;
+    color: #b3261e;
+    font-size: 13px;
+}
 
 /* Candidate information card */
 .candidate-information-card,
@@ -966,4 +1051,5 @@
     .video-placeholder {
         padding: 14px;
     }
+
 }

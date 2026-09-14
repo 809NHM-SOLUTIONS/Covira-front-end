@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./SettingsPage.css";
 import AlertModal from "../components/AlertModal";
+import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from "../styles/utils/timezoneOptions";
 
 const SETTINGS_URL = "http://localhost:8081/api/employer/settings";
 
@@ -28,9 +29,12 @@ function ToggleRow({ label, description, checked, onChange, disabled }) {
 function SettingsPage() {
   const [settings, setSettings] = useState({
     notifyNewCandidateApplications: true,
-    language: "en",
-    timezone: "Africa/Johannesburg",
+    timezone: DEFAULT_TIMEZONE,
+    ccEmail: "",
   });
+
+  const [ccEmailInput, setCcEmailInput] = useState("");
+  const [ccEmailError, setCcEmailError] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,6 +48,12 @@ function SettingsPage() {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    setCcEmailInput(settings.ccEmail || "");
+  }, [settings.ccEmail]);
+
+  const CC_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const showAlert = (type, title, message) => {
     setAlertType(type);
@@ -85,12 +95,27 @@ function SettingsPage() {
         body: JSON.stringify(nextSettings),
       });
 
-      if (!response.ok) {
-        throw new Error("Unable to save your changes.");
+      const responseText = await response.text();
+
+      let data = null;
+
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        data = responseText;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof data === "string" && data.trim()
+            ? data
+            : "Unable to save your changes."
+        );
+      }
+
       setSettings(data);
+
+      window.dispatchEvent(new Event("employerSettingsUpdated"));
     } catch (error) {
       showAlert("error", "Save Failed", error.message || "Unable to save your changes.");
     } finally {
@@ -102,6 +127,23 @@ function SettingsPage() {
     const next = { ...settings, [key]: value };
     setSettings(next);
     saveSettings(next);
+  };
+
+  const handleCcEmailBlur = () => {
+    const trimmed = ccEmailInput.trim();
+
+    if (trimmed === (settings.ccEmail || "")) {
+      setCcEmailError("");
+      return;
+    }
+
+    if (trimmed && !CC_EMAIL_PATTERN.test(trimmed)) {
+      setCcEmailError("Enter a valid email address.");
+      return;
+    }
+
+    setCcEmailError("");
+    updateAndSave("ccEmail", trimmed);
   };
 
   const handleLogoutAllDevices = async () => {
@@ -169,6 +211,26 @@ function SettingsPage() {
           onChange={(v) => updateAndSave("notifyNewCandidateApplications", v)}
           disabled={saving}
         />
+
+        <div className="settings-field">
+          <label htmlFor="ccEmail">CC email (optional)</label>
+          <input
+            id="ccEmail"
+            type="email"
+            placeholder="e.g. hr@yourcompany.com"
+            value={ccEmailInput}
+            onChange={(e) => setCcEmailInput(e.target.value)}
+            onBlur={handleCcEmailBlur}
+            disabled={saving || !settings.notifyNewCandidateApplications}
+          />
+          {ccEmailError ? (
+            <p className="settings-field-error">{ccEmailError}</p>
+          ) : (
+            <p className="settings-toggle-description">
+              Also send new-candidate alerts to this address, e.g. a shared HR inbox.
+            </p>
+          )}
+        </div>
        
         <ToggleRow
           label="Security alerts"
@@ -184,23 +246,8 @@ function SettingsPage() {
       <section className="settings-card">
         <h2>Preferences</h2>
         <p className="settings-card-subtitle">
-          Set your default language and timezone across Covira.
+          Set your default timezone across Covira.
         </p>
-
-        <div className="settings-field">
-          <label htmlFor="language">Language</label>
-          <select
-            id="language"
-            value={settings.language}
-            onChange={(e) => updateAndSave("language", e.target.value)}
-            disabled={saving}
-          >
-            <option value="en">English</option>
-            <option value="af">Afrikaans</option>
-            <option value="zu">isiZulu</option>
-            <option value="xh">isiXhosa</option>
-          </select>
-        </div>
 
         <div className="settings-field">
           <label htmlFor="timezone">Timezone</label>
@@ -210,11 +257,11 @@ function SettingsPage() {
             onChange={(e) => updateAndSave("timezone", e.target.value)}
             disabled={saving}
           >
-            <option value="Africa/Johannesburg">Africa/Johannesburg (SAST, UTC+2)</option>
-            <option value="Africa/Lagos">Africa/Lagos (WAT, UTC+1)</option>
-            <option value="Africa/Nairobi">Africa/Nairobi (EAT, UTC+3)</option>
-            <option value="Europe/London">Europe/London (GMT/BST)</option>
-            <option value="UTC">UTC</option>
+            {TIMEZONE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </section>
@@ -233,7 +280,7 @@ function SettingsPage() {
               Change your password with email verification.
             </p>
           </div>
-          <a href="/profile" className="settings-secondary-button">
+          <a href="/dashboard/profile" className="settings-secondary-button">
             Go to Profile
           </a>
         </div>
