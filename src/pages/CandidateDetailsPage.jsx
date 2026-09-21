@@ -517,9 +517,7 @@ function CandidateDetailsPage() {
   };
 
   /*
-   * =========================================================
-   * STATUS CLASS
-   * =========================================================
+   STATUS CLASS
    */
 
   const getStatusClass = (status) => {
@@ -529,9 +527,7 @@ function CandidateDetailsPage() {
   };
 
   /*
-   * =========================================================
-   * RECORD DECISION (SHORTLIST / REJECT)
-   * =========================================================
+    RECORD DECISION (SHORTLIST / REJECT)
    */
 
   const handleDecision = async (decision) => {
@@ -628,11 +624,7 @@ function CandidateDetailsPage() {
     }
   };
 
-  /*
-   * =========================================================
-   * LOADING
-   * =========================================================
-   */
+  /* LOADING */
 
   if (loading) {
     return (
@@ -648,11 +640,7 @@ function CandidateDetailsPage() {
     );
   }
 
-  /*
-   * =========================================================
-   * ERROR
-   * =========================================================
-   */
+  /* ERROR  */
 
   if (error || !candidate) {
     return (
@@ -684,11 +672,7 @@ function CandidateDetailsPage() {
     );
   }
 
-  /*
-   * =========================================================
-   * CANDIDATE DATA
-   * =========================================================
-   */
+  /*CANDIDATE DATA*/
 
   const initial =
     candidate.name
