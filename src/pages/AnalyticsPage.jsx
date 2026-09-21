@@ -4,8 +4,6 @@ import "../styles/AnalyticsPage.css";
 import { DATE_LOCALE } from "../styles/utils/dateFormat";
 
 import {
-  HiOutlineUserGroup,
-  HiOutlineClipboardDocumentCheck,
   HiOutlineChartBar,
   HiOutlineVideoCamera,
   HiOutlineExclamationCircle,
@@ -22,6 +20,7 @@ import {
 const API_BASE_URL = "http://localhost:8081";
 const DASHBOARD_SUMMARY_URL = `${API_BASE_URL}/api/dashboard/summary`;
 const CANDIDATES_URL = `${API_BASE_URL}/api/candidates`;
+const INTERVIEWS_URL = `${API_BASE_URL}/api/interviews`;
 
 const MAX_VIDEO_CANDIDATES_TO_CHECK = 8;
 const MAX_VIDEO_PREVIEWS = 4;
@@ -266,6 +265,7 @@ function timestampOf(candidate) {
 function AnalyticsPage() {
   const [summary, setSummary] = useState(null);
   const [candidates, setCandidates] = useState([]);
+  const [allInterviews, setAllInterviews] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -451,13 +451,17 @@ function AnalyticsPage() {
     setError("");
 
     try {
-      const [summaryRes, candidatesRes] =
+      const [summaryRes, candidatesRes, interviewsRes] =
         await Promise.all([
           fetch(DASHBOARD_SUMMARY_URL, {
             method: "GET",
             credentials: "include",
           }),
           fetch(CANDIDATES_URL, {
+            method: "GET",
+            credentials: "include",
+          }),
+          fetch(INTERVIEWS_URL, {
             method: "GET",
             credentials: "include",
           }),
@@ -493,6 +497,25 @@ function AnalyticsPage() {
       setCandidates(candidateList);
       setAsOf(Date.now());
 
+      /*
+       * The dashboard summary only returns a capped, "recent"
+       * slice of interviews. For real analysis (role breakdown,
+       * stalled-interview detection) we want the full, uncapped
+       * list. If this fetch fails, we fall back to the capped
+       * summary list further down rather than breaking the page.
+       */
+      if (interviewsRes.ok) {
+        const interviewsData = await interviewsRes.json();
+
+        setAllInterviews(
+          Array.isArray(interviewsData)
+            ? interviewsData
+            : []
+        );
+      } else {
+        setAllInterviews(null);
+      }
+
       loadVideoPreviews(candidateList);
     } catch (err) {
       console.error(
@@ -525,10 +548,65 @@ function AnalyticsPage() {
   const candidateOverview =
     summary?.candidateOverview || {};
 
+  const attentionActions = useMemo(
+    () => summary?.actionsRequiringAttention || [],
+    [summary]
+  );
+
+  /*
+   * candidateOverview.awaitingReview is unreliable — it has been seen
+   * returning 0 while the backend's own actionsRequiringAttention feed
+   * (type "CANDIDATES_AWAITING_REVIEW") reports the correct, non-zero
+   * count for the same data. Prefer that action's count; fall back to
+   * the candidateOverview field only if the action isn't present.
+   */
+  const awaitingReviewCount = useMemo(() => {
+    const action = attentionActions.find(
+      (a) => a.type === "CANDIDATES_AWAITING_REVIEW"
+    );
+
+    if (action && typeof action.count === "number") {
+      return action.count;
+    }
+
+    return candidateOverview.awaitingReview ?? 0;
+  }, [attentionActions, candidateOverview.awaitingReview]);
+
   const recentInterviews = useMemo(
     () => summary?.recentInterviews || [],
     [summary]
   );
+
+  /*
+   * Prefer the full, uncapped interview list for any real analysis.
+   * It doesn't come with candidate counts attached (unlike the capped
+   * summary list), so we compute them here the same way the backend
+   * does: matching candidates to interviews by title. Falls back to
+   * the capped summary list if that fetch failed.
+   */
+  const interviewsWithCounts = useMemo(() => {
+    if (!Array.isArray(allInterviews)) {
+      return recentInterviews;
+    }
+
+    return allInterviews.map((interview) => {
+      const matched = candidates.filter(
+        (c) => c.interview === interview.title
+      );
+
+      const responded = matched.filter(
+        (c) =>
+          String(c.status || "").toLowerCase() !==
+          "pending"
+      ).length;
+
+      return {
+        ...interview,
+        candidateCount: matched.length,
+        completedResponseCount: responded,
+      };
+    });
+  }, [allInterviews, candidates, recentInterviews]);
 
   const totalInterviews =
     stats.totalInterviews ?? 0;
@@ -636,7 +714,7 @@ function AnalyticsPage() {
   const roleBreakdown = useMemo(() => {
     const map = new Map();
 
-    recentInterviews.forEach((interview) => {
+    interviewsWithCounts.forEach((interview) => {
       const key =
         interview.position ||
         interview.department ||
@@ -675,7 +753,7 @@ function AnalyticsPage() {
           b.invited - a.invited
       )
       .slice(0, 5);
-  }, [recentInterviews]);
+  }, [interviewsWithCounts]);
 
   /*
    * =========================================================
@@ -686,7 +764,7 @@ function AnalyticsPage() {
   const stalledInterviews = useMemo(() => {
     if (!asOf) return [];
 
-    return recentInterviews.filter(
+    return interviewsWithCounts.filter(
       (interview) => {
         const invited =
           interview.candidateCount ?? 0;
@@ -721,7 +799,7 @@ function AnalyticsPage() {
         );
       }
     );
-  }, [recentInterviews, asOf]);
+  }, [interviewsWithCounts, asOf]);
 
   /*
    * =========================================================
@@ -729,7 +807,7 @@ function AnalyticsPage() {
    * =========================================================
    */
 
-  const needsReview = useMemo(() => {
+  const needsReviewAll = useMemo(() => {
     return candidates
       .filter(
         (c) =>
@@ -741,9 +819,13 @@ function AnalyticsPage() {
         (a, b) =>
           timestampOf(a) -
           timestampOf(b)
-      )
-      .slice(0, 5);
+      );
   }, [candidates]);
+
+  const needsReview = useMemo(
+    () => needsReviewAll.slice(0, 5),
+    [needsReviewAll]
+  );
 
   const daysWaiting = (candidate) => {
     const time = timestampOf(candidate);
@@ -1028,23 +1110,23 @@ function AnalyticsPage() {
       <div className="analytics-stats-grid">
         <div className="analytics-stat-card">
           <div className="analytics-stat-icon analytics-stat-icon-blue">
-            <HiOutlineClipboardDocumentCheck />
+            <HiOutlineEye />
           </div>
 
           <div>
-            <h3>{totalInterviews}</h3>
-            <span>Total Interviews</span>
+            <h3>{needsReviewAll.length}</h3>
+            <span>Awaiting Review</span>
           </div>
         </div>
 
         <div className="analytics-stat-card">
           <div className="analytics-stat-icon analytics-stat-icon-teal">
-            <HiOutlineUserGroup />
+            <HiOutlineExclamationTriangle />
           </div>
 
           <div>
-            <h3>{totalCandidates}</h3>
-            <span>Total Candidates</span>
+            <h3>{stalledInterviews.length}</h3>
+            <span>Stalled Interviews</span>
           </div>
         </div>
 
@@ -1072,113 +1154,6 @@ function AnalyticsPage() {
           </div>
         </div>
       </div>
-
-      {/* ==================== RESPONSE TREND ==================== */}
-
-      <section className="analytics-card">
-        <h2>
-          <HiOutlineCalendarDays className="analytics-card-title-icon" />
-          Responses Over Time
-        </h2>
-
-        <p className="analytics-card-subtitle">
-          Candidate submissions over the last{" "}
-          {RESPONSE_TREND_DAYS} days.
-        </p>
-
-        {candidates.length === 0 ? (
-          <div className="analytics-inline-empty">
-            <p>
-              No submissions yet to chart.
-            </p>
-          </div>
-        ) : (
-          <div className="analytics-trend-chart">
-            {responseTrend.map((day) => (
-              <div
-                className="analytics-trend-bar-wrap"
-                key={day.key}
-                title={`${day.count} on ${formatDate(
-                  day.date
-                )}`}
-              >
-                <div
-                  className={`analytics-trend-bar ${
-                    day.count > 0
-                      ? "has-data"
-                      : ""
-                  }`}
-                  style={{
-                    height: `${Math.max(
-                      4,
-                      (day.count /
-                        maxTrendCount) *
-                        100
-                    )}%`,
-                  }}
-                />
-
-                <span className="analytics-trend-label">
-                  {day.date.toLocaleDateString(
-                    DATE_LOCALE,
-                    {
-                      day: "2-digit",
-                      month: "short",
-                    }
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ==================== STATUS BREAKDOWN ==================== */}
-
-      <section className="analytics-card">
-        <h2>
-          Candidate Status Breakdown
-        </h2>
-
-        <p className="analytics-card-subtitle">
-          Where candidates currently stand
-          across all interviews.
-        </p>
-
-        <div className="analytics-status-grid">
-          <div className="analytics-status-pill">
-            <span className="status-badge status-completed">
-              Completed
-            </span>
-
-            <strong>
-              {candidateOverview.completed ??
-                0}
-            </strong>
-          </div>
-
-          <div className="analytics-status-pill">
-            <span className="status-badge status-reviewed">
-              Reviewed
-            </span>
-
-            <strong>
-              {candidateOverview.awaitingReview ??
-                0}
-            </strong>
-          </div>
-
-          <div className="analytics-status-pill">
-            <span className="status-badge status-pending">
-              Pending
-            </span>
-
-            <strong>
-              {stats.pendingResponses ?? 0}
-            </strong>
-          </div>
-        </div>
-      </section>
 
       {/* ==================== NEEDS ATTENTION ==================== */}
 
@@ -1285,6 +1260,189 @@ function AnalyticsPage() {
         </section>
       )}
 
+      {/* ==================== RESPONSE TREND ==================== */}
+
+      <section className="analytics-card">
+        <h2>
+          <HiOutlineCalendarDays className="analytics-card-title-icon" />
+          Responses Over Time
+        </h2>
+
+        <p className="analytics-card-subtitle">
+          Candidate submissions over the last{" "}
+          {RESPONSE_TREND_DAYS} days.
+        </p>
+
+        {candidates.length === 0 ? (
+          <div className="analytics-inline-empty">
+            <p>
+              No submissions yet to chart.
+            </p>
+          </div>
+        ) : (
+          <div className="analytics-trend-chart">
+            {responseTrend.map((day) => (
+              <div
+                className="analytics-trend-bar-wrap"
+                key={day.key}
+                title={`${day.count} on ${formatDate(
+                  day.date
+                )}`}
+              >
+                <div
+                  className={`analytics-trend-bar ${
+                    day.count > 0
+                      ? "has-data"
+                      : ""
+                  }`}
+                  style={{
+                    height: `${Math.max(
+                      4,
+                      (day.count /
+                        maxTrendCount) *
+                        100
+                    )}%`,
+                  }}
+                />
+
+                <span className="analytics-trend-label">
+                  {day.date.toLocaleDateString(
+                    DATE_LOCALE,
+                    {
+                      day: "2-digit",
+                      month: "short",
+                    }
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ==================== STATUS BREAKDOWN + RESPONSE FORMAT ==================== */}
+
+      <div className="analytics-card-row">
+        <section className="analytics-card">
+          <h2>
+            Candidate Status Breakdown
+          </h2>
+
+          <p className="analytics-card-subtitle">
+            Where candidates currently stand
+            across all interviews.
+          </p>
+
+          <div className="analytics-status-grid">
+            <div className="analytics-status-pill">
+              <span className="status-badge status-completed">
+                Completed
+              </span>
+
+              <strong>
+                {candidateOverview.completed ??
+                  0}
+              </strong>
+            </div>
+
+            <div className="analytics-status-pill">
+              <span className="status-badge status-reviewed">
+                Awaiting Review
+              </span>
+
+              <strong>
+                {awaitingReviewCount}
+              </strong>
+            </div>
+
+            <div className="analytics-status-pill">
+              <span className="status-badge status-pending">
+                Pending
+              </span>
+
+              <strong>
+                {stats.pendingResponses ?? 0}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        {responseFormatStats.sampleSize >
+          0 && (
+          <section className="analytics-card">
+            <h2>
+              <HiOutlineDocumentText className="analytics-card-title-icon" />
+              Response Format
+            </h2>
+
+            <p className="analytics-card-subtitle">
+              Video vs. text answers across
+              recent submissions.
+            </p>
+
+            
+            {(() => {
+              const totalAnswers =
+                responseFormatStats.video +
+                responseFormatStats.text +
+                responseFormatStats.other;
+
+              const videoPct =
+                totalAnswers > 0
+                  ? Math.round(
+                      (responseFormatStats.video /
+                        totalAnswers) *
+                        100
+                    )
+                  : 0;
+
+              const textPct =
+                totalAnswers > 0
+                  ? Math.round(
+                      (responseFormatStats.text /
+                        totalAnswers) *
+                        100
+                    )
+                  : 0;
+
+              return (
+                <div className="analytics-status-grid">
+                  <div className="analytics-status-pill">
+                    <span className="status-badge status-completed">
+                      <HiOutlineVideoCamera
+                        style={{
+                          marginRight: "4px",
+                        }}
+                      />
+                      Video
+                    </span>
+
+                    <strong>
+                      {videoPct}%
+                    </strong>
+                  </div>
+
+                  <div className="analytics-status-pill">
+                    <span className="status-badge status-reviewed">
+                      <HiOutlineDocumentText
+                        style={{
+                          marginRight: "4px",
+                        }}
+                      />
+                      Text
+                    </span>
+
+                    <strong>
+                      {textPct}%
+                    </strong>
+                  </div>
+                </div>
+              );
+            })()}
+          </section>
+        )}
+      </div>
+
       {/* ==================== TOP ROLES ==================== */}
 
       {roleBreakdown.length > 0 && (
@@ -1336,194 +1494,6 @@ function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {/* ==================== PER-INTERVIEW BREAKDOWN ==================== */}
-
-      <section className="analytics-card">
-        <h2>
-          Responses by Interview
-        </h2>
-
-        <p className="analytics-card-subtitle">
-          How many candidates have responded
-          to each interview so far.
-        </p>
-
-        {recentInterviews.length === 0 ? (
-          <div className="analytics-inline-empty">
-            <h3>
-              No interviews with activity yet
-            </h3>
-
-            <p>
-              Create an interview and invite
-              candidates to see a breakdown
-              here.
-            </p>
-
-            <Link
-              to="/dashboard/interviews/create"
-              className="analytics-secondary-btn"
-            >
-              <HiOutlinePlusCircle />
-              Create Interview
-            </Link>
-          </div>
-        ) : (
-          <div className="analytics-interview-list">
-            {recentInterviews.map(
-              (interview) => {
-                const responded =
-                  interview.completedResponseCount ??
-                  0;
-
-                const invited =
-                  interview.candidateCount ??
-                  0;
-
-                const percent =
-                  invited > 0
-                    ? Math.round(
-                        (responded /
-                          invited) *
-                          100
-                      )
-                    : 0;
-
-                return (
-                  <div
-                    className="analytics-interview-row"
-                    key={interview.id}
-                  >
-                    <div className="analytics-interview-main">
-                      <div>
-                        <strong>
-                          {interview.title ||
-                            "Untitled Interview"}
-                        </strong>
-
-                        <span>
-                          {interview.position ||
-                            "No position set"}
-                        </span>
-                      </div>
-
-                      {interview.status && (
-                        <span
-                          className={`status-badge status-${getStatusClass(
-                            interview.status
-                          )}`}
-                        >
-                          {interview.status}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="analytics-interview-progress">
-                      <div className="analytics-progress-bar">
-                        <div
-                          className="analytics-progress-fill"
-                          style={{
-                            width: `${
-                              invited > 0
-                                ? percent
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-
-                      <span className="analytics-progress-label">
-                        {invited > 0
-                          ? `${responded}/${invited} candidates responded (${percent}%)`
-                          : "No candidates invited yet"}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* ==================== RESPONSE FORMAT MIX ==================== */}
-
-      {responseFormatStats.sampleSize >
-        0 && (
-        <section className="analytics-card">
-          <h2>
-            <HiOutlineDocumentText className="analytics-card-title-icon" />
-            Response Format
-          </h2>
-
-          <p className="analytics-card-subtitle">
-            Video vs. text answers, based on
-            the{" "}
-            {responseFormatStats.sampleSize}{" "}
-            most recent submissions checked.
-          </p>
-
-          {(() => {
-            const totalAnswers =
-              responseFormatStats.video +
-              responseFormatStats.text +
-              responseFormatStats.other;
-
-            const videoPct =
-              totalAnswers > 0
-                ? Math.round(
-                    (responseFormatStats.video /
-                      totalAnswers) *
-                      100
-                  )
-                : 0;
-
-            const textPct =
-              totalAnswers > 0
-                ? Math.round(
-                    (responseFormatStats.text /
-                      totalAnswers) *
-                      100
-                  )
-                : 0;
-
-            return (
-              <div className="analytics-status-grid">
-                <div className="analytics-status-pill">
-                  <span className="status-badge status-completed">
-                    <HiOutlineVideoCamera
-                      style={{
-                        marginRight: "4px",
-                      }}
-                    />
-                    Video
-                  </span>
-
-                  <strong>
-                    {videoPct}%
-                  </strong>
-                </div>
-
-                <div className="analytics-status-pill">
-                  <span className="status-badge status-reviewed">
-                    <HiOutlineDocumentText
-                      style={{
-                        marginRight: "4px",
-                      }}
-                    />
-                    Text
-                  </span>
-
-                  <strong>
-                    {textPct}%
-                  </strong>
-                </div>
-              </div>
-            );
-          })()}
         </section>
       )}
 

@@ -430,14 +430,27 @@ const handleLogout = async () => {
 
   // Normal logout confirmation
   const result = await Swal.fire({
-    title: "Logout?",
-    text: "Are you sure you want to logout?",
-    icon: "question",
+    html: `
+      <div class="covira-swal">
+        <div class="covira-swal-badge covira-swal-badge-warning">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14.18A2 2 0 0 0 3.82 21h16.36a2 2 0 0 0 1.71-2.96L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#DC6803" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Logout?</h2>
+        <p>Are you sure you want to logout?</p>
+      </div>
+    `,
     showCancelButton: true,
-    confirmButtonColor: "#00A99D",
-    cancelButtonColor: "#d33",
+    buttonsStyling: false,
+    background: "#ffffff",
     confirmButtonText: "Logout",
     cancelButtonText: "Cancel",
+    customClass: {
+      popup: "covira-swal-popup",
+      confirmButton: "covira-btn covira-btn-primary",
+      cancelButton: "covira-btn covira-btn-secondary",
+    },
   });
 
 

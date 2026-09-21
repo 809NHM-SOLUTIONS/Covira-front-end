@@ -113,6 +113,44 @@
 }
 
 /* ==========================================
+   Card row (two compact cards side by side)
+========================================== */
+
+.analytics-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.analytics-card-row > .analytics-card {
+  flex: 1 1 320px;
+  margin-bottom: 0;
+}
+
+/* ==========================================
+   Inline note / caveat banner (e.g. sampled data)
+========================================== */
+
+.analytics-card-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fff4e0;
+  color: #9a7200;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.analytics-card-note svg {
+  min-width: 16px;
+  font-size: 16px;
+}
+
+/* ==========================================
    Status Breakdown
 ========================================== */
 
@@ -584,6 +622,10 @@
 
   .analytics-attention-grid {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-card-row {
+    flex-direction: column;
   }
 }
 

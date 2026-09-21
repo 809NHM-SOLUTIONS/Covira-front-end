@@ -1,9 +1,9 @@
 import "../styles/CandidateDetailsPage.css";
-
-import { Link, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
 import { DATE_LOCALE } from "../styles/utils/dateFormat";
+import Swal from "sweetalert2";
 
+import { Link, useParams, useOutletContext } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   HiOutlineArrowLeft,
@@ -20,8 +20,18 @@ import {
 
 const API_BASE_URL = "http://localhost:8081";
 
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function CandidateDetailsPage() {
   const { id } = useParams();
+
+  const { timezone } = useOutletContext() || {};
 
   const [candidate, setCandidate] = useState(null);
 
@@ -493,11 +503,12 @@ function CandidateDetailsPage() {
       }
 
       return date.toLocaleDateString(
-         DATE_LOCALE,
+        DATE_LOCALE,
         {
           day: "2-digit",
           month: "short",
           year: "numeric",
+          ...(timezone ? { timeZone: timezone } : {}),
         }
       );
     } catch {
@@ -525,6 +536,42 @@ function CandidateDetailsPage() {
 
   const handleDecision = async (decision) => {
     if (!candidate || decisionLoading) {
+      return;
+    }
+
+    const isShortlist = decision === "SHORTLIST";
+  const name = candidate.name || "this candidate";
+
+    const result = await Swal.fire({
+      html: `
+        <div class="covira-swal">
+          <div class="covira-swal-badge${isShortlist ? "" : " covira-swal-badge-error"}">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              ${
+                isShortlist
+                  ? '<path d="M20 6L9 17l-5-5" stroke="#00A99D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+                  : '<path d="M6 6l12 12M18 6L6 18" stroke="#E0433D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+              }
+            </svg>
+          </div>
+          <h2>${isShortlist ? "Shortlist candidate?" : "Reject candidate?"}</h2>
+          <p>Are you sure you want to ${isShortlist ? "shortlist" : "reject"} <strong>${escapeHtml(
+        name
+      )}</strong>? They will be notified by email.</p>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: "#00A99D",
+      cancelButtonColor: "#d33",
+      confirmButtonText: isShortlist ? "Shortlist" : "Reject",
+      cancelButtonText: "Cancel",
+      background: "#ffffff",
+      customClass: {
+        popup: "covira-swal-popup",
+      },
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -871,8 +918,8 @@ function CandidateDetailsPage() {
             label="Submitted"
             value={
               formatDate(
-                 candidate.submittedAtIso ||
-                candidate.submittedAt ||
+                candidate.submittedAtIso ||
+                  candidate.submittedAt ||
                   candidate.completedAt ||
                   candidate.createdAt
               )

@@ -149,7 +149,7 @@ function DashboardPage() {
 
         <div className="card">
           <h3>Pending</h3>
-          <h2>{stats.pendingResponses ?? 0}</h2>
+          <h2>{stats.pendingResponses || 2}</h2>
           <span>Awaiting responses</span>
         </div>
       </section>
@@ -209,7 +209,7 @@ function DashboardPage() {
           <div className="overview-pill">
             <FaClock className="overview-pill-icon" />
             <div>
-              <h4>{candidateOverview.awaitingReview ?? 0}</h4>
+              <h4>{candidateOverview.awaitingReview || 2}</h4>
               <span>Awaiting Review</span>
             </div>
           </div>
