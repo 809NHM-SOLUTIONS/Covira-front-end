@@ -1,4 +1,5 @@
 import "../styles/CreateInterviewPage.css";
+import "../styles/CreateInterviewQuestions.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,9 +11,179 @@ import {
     HiOutlineTrash,
     HiOutlineChevronUp,
     HiOutlineChevronDown,
-    HiOutlineMagnifyingGlass,
-    HiOutlineCog6Tooth
+    HiOutlineCog6Tooth,
+    HiOutlineClock,
+    HiOutlineArrowPath,
+    HiOutlineShieldCheck,
+    HiOutlineChatBubbleLeftRight,
+    HiOutlineVideoCamera,
+    HiOutlineXMark,
+    HiOutlinePencilSquare,
+    HiOutlineCheckCircle,
+    HiOutlineListBullet
 } from "react-icons/hi2";
+
+/*
+ * ============================================================
+ * INTERVIEW SETTINGS: OPTIONS + SMALL UI PIECES
+ * ============================================================
+ */
+
+const TIME_LIMIT_OPTIONS = [
+    { value: 30, label: "30 sec" },
+    { value: 60, label: "1 min" },
+    { value: 120, label: "2 min" },
+    { value: 180, label: "3 min" },
+    { value: 300, label: "5 min" },
+    { value: null, label: "No limit" }
+];
+
+const RETAKE_OPTIONS = [
+    { value: 0, label: "None" },
+    { value: 1, label: "1" },
+    { value: 2, label: "2" },
+    { value: 3, label: "3" },
+    { value: null, label: "Unlimited" }
+];
+
+const DEFAULT_SETTINGS = {
+    // seconds per video answer, null = no limit
+    answerTimeLimit: 120,
+    // re-records per video question, null = unlimited
+    maxRetakes: 1,
+    // datetime-local string, "" = no deadline
+    candidateDeadline: "",
+    welcomeMessage: "",
+    requireConsent: true,
+    allowBackNavigation: true
+};
+
+const QUESTION_TYPES = [
+    { value: "Video", label: "Video", Icon: HiOutlineVideoCamera },
+    { value: "Text", label: "Written", Icon: HiOutlinePencilSquare },
+    { value: "Yes/No", label: "Yes / No", Icon: HiOutlineCheckCircle },
+    { value: "Multiple Choice", label: "Multiple Choice", Icon: HiOutlineListBullet }
+];
+
+const WELCOME_MAX_LENGTH = 1000;
+
+function formatSeconds(totalSeconds) {
+
+    if (totalSeconds === null) {
+        return "No limit";
+    }
+
+    if (totalSeconds < 60) {
+        return `${totalSeconds} sec`;
+    }
+
+    const minutes = totalSeconds / 60;
+
+    return `${Number.isInteger(minutes)
+        ? minutes
+        : minutes.toFixed(1)} min`;
+}
+
+function formatRetakes(maxRetakes) {
+
+    if (maxRetakes === null) {
+        return "Unlimited";
+    }
+
+    if (maxRetakes === 0) {
+        return "None";
+    }
+
+    return `${maxRetakes} per question`;
+}
+
+function formatDeadline(value) {
+
+    if (!value) {
+        return "No deadline";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "No deadline";
+    }
+
+    return date.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short"
+    });
+}
+
+/* Pill-style single choice control (radio group). */
+function SegmentedControl({
+    label,
+    options,
+    value,
+    onChange
+}) {
+
+    return (
+        <div
+            className="segmented"
+            role="radiogroup"
+            aria-label={label}
+        >
+            {options.map((option) => (
+                <button
+                    key={String(option.value)}
+                    type="button"
+                    role="radio"
+                    aria-checked={value === option.value}
+                    className={`segment ${
+                        value === option.value
+                            ? "active"
+                            : ""
+                    }`}
+                    onClick={() => onChange(option.value)}
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+/* Row with a title, helper text and an on/off switch. */
+function ToggleRow({
+    id,
+    title,
+    description,
+    checked,
+    onChange
+}) {
+
+    return (
+        <div className="setting-row">
+
+            <div className="setting-text">
+                <h3 id={`${id}-label`}>
+                    {title}
+                </h3>
+                <p>
+                    {description}
+                </p>
+            </div>
+
+            <button
+                type="button"
+                role="switch"
+                aria-checked={checked}
+                aria-labelledby={`${id}-label`}
+                className={`switch ${checked ? "on" : ""}`}
+                onClick={() => onChange(!checked)}
+            >
+                <span className="switch-thumb" />
+            </button>
+
+        </div>
+    );
+}
 
 function CreateInterviewPage() {
 
@@ -35,8 +206,6 @@ function CreateInterviewPage() {
     const [interview, setInterview] = useState({
         title: "",
         description: "",
-
-        // Settings
         position: "",
         department: "",
         employmentType: "",
@@ -52,12 +221,32 @@ function CreateInterviewPage() {
 
     const [questions, setQuestions] = useState([
         {
-            id: Date.now(),
+            id: "initial-question",
             question: "",
             type: "Video",
-            required: true
+            required: true,
+            options: ["", ""],
+            allowMultiple: false
         }
     ]);
+
+
+    /*
+     * ============================================================
+     * INTERVIEW SETTINGS
+     * ============================================================
+     */
+
+    const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+    const updateSetting = (key, value) => {
+
+        setSettings((current) => ({
+            ...current,
+            [key]: value
+        }));
+
+    };
 
 
     /*
@@ -123,10 +312,56 @@ function CreateInterviewPage() {
 
                 type: "Video",
 
-                required: true
+                required: true,
+
+                options: ["", ""],
+
+                allowMultiple: false
             }
 
         ]);
+
+    };
+
+
+    /*
+     * ============================================================
+     * MULTIPLE CHOICE OPTIONS
+     * ============================================================
+     */
+
+    const updateOption = (qId, optIndex, value) => {
+
+        setQuestions((qs) => qs.map((q) =>
+            q.id === qId
+                ? {
+                    ...q,
+                    options: (q.options || []).map((o, i) =>
+                        i === optIndex ? value : o
+                    )
+                }
+                : q
+        ));
+
+    };
+
+    const addOption = (qId) => {
+
+        setQuestions((qs) => qs.map((q) =>
+            q.id === qId && (q.options?.length || 0) < 6
+                ? { ...q, options: [...(q.options || []), ""] }
+                : q
+        ));
+
+    };
+
+    const removeOption = (qId, optIndex) => {
+
+        setQuestions((qs) => qs.map((q) =>
+            q.id === qId && (q.options?.length || 0) > 2
+                ? { ...q, options: q.options.filter((_, i) => i !== optIndex) }
+                : q
+        ));
 
     };
 
@@ -315,8 +550,59 @@ function CreateInterviewPage() {
         }
 
 
+        const badChoice = questions.find(
+            (q) =>
+                q.type === "Multiple Choice" &&
+                (q.options || []).filter((o) => o.trim()).length < 2
+        );
+
+        if (badChoice) {
+
+            setError(
+                "Multiple choice questions need at least 2 answer options."
+            );
+
+            return false;
+        }
+
+
         setError("");
 
+        return true;
+    };
+
+
+    /*
+     * ============================================================
+     * VALIDATE SETTINGS
+     * ============================================================
+     */
+
+    const validateSettings = () => {
+
+        if (settings.candidateDeadline) {
+
+            const deadline = new Date(settings.candidateDeadline);
+
+            if (
+                Number.isNaN(deadline.getTime()) ||
+                deadline.getTime() <= new Date().getTime()
+            ) {
+                setError(
+                    "The candidate deadline must be a date and time in the future."
+                );
+                return false;
+            }
+        }
+
+        if (settings.welcomeMessage.length > WELCOME_MAX_LENGTH) {
+            setError(
+                `The welcome message must be ${WELCOME_MAX_LENGTH} characters or fewer.`
+            );
+            return false;
+        }
+
+        setError("");
         return true;
     };
 
@@ -346,6 +632,15 @@ function CreateInterviewPage() {
         if (step === 2) {
 
             if (!validateQuestions()) {
+                return;
+            }
+
+        }
+
+
+        if (step === 3) {
+
+            if (!validateSettings()) {
                 return;
             }
 
@@ -395,10 +690,6 @@ function CreateInterviewPage() {
 
     const createInterview = async () => {
 
-        /*
-         * Make sure details are valid.
-         */
-
         if (!validateDetails()) {
 
             setStep(1);
@@ -407,13 +698,17 @@ function CreateInterviewPage() {
         }
 
 
-        /*
-         * Make sure questions are valid.
-         */
-
         if (!validateQuestions()) {
 
             setStep(2);
+
+            return;
+        }
+
+
+        if (!validateSettings()) {
+
+            setStep(3);
 
             return;
         }
@@ -466,26 +761,34 @@ function CreateInterviewPage() {
                                 interview.location,
 
                             description:
-                                interview.description
+                                interview.description,
+
+                            /*
+                             * Interview settings
+                             */
+                            answerTimeLimit:
+                                settings.answerTimeLimit,
+                            maxRetakes:
+                                settings.maxRetakes,
+                            candidateDeadline:
+                                settings.candidateDeadline || null,
+                            welcomeMessage:
+                                settings.welcomeMessage.trim() || null,
+                            requireConsent:
+                                settings.requireConsent,
+                            allowBackNavigation:
+                                settings.allowBackNavigation
 
                         })
                     }
                 );
 
 
-            /*
-             * Try to read the backend response.
-             */
-
             const createdInterview =
                 await interviewResponse
                     .json()
                     .catch(() => null);
 
-
-            /*
-             * Check interview creation.
-             */
 
             if (!interviewResponse.ok) {
 
@@ -551,6 +854,9 @@ function CreateInterviewPage() {
                 of questions
             ) {
 
+                const isChoice =
+                    question.type === "Multiple Choice";
+
                 const questionResponse =
                     await fetch(
                         `http://localhost:8081/api/interviews/${interviewId}/questions`,
@@ -574,9 +880,30 @@ function CreateInterviewPage() {
                                     questionType:
                                         question.type,
 
+                                    /*
+                                     * Time limits only apply to video answers.
+                                     */
                                     timeLimit:
-                                        null
+                                        question.type === "Video"
+                                            ? settings.answerTimeLimit
+                                            : null,
 
+                                    /*
+                                     * Multiple choice only.
+                                     */
+                                    options:
+                                        isChoice
+                                            ? (question.options || [])
+                                                .map((o) => o.trim())
+                                                .filter(Boolean)
+                                            : [],
+
+                                    allowMultiple:
+                                        isChoice
+                                            ? !!question.allowMultiple
+                                            : false,
+
+                                            required: question.required !== false
                                 })
                         }
                     );
@@ -587,10 +914,6 @@ function CreateInterviewPage() {
                         .json()
                         .catch(() => null);
 
-
-                /*
-                 * Check question creation.
-                 */
 
                 if (
                     !questionResponse.ok
@@ -630,10 +953,6 @@ function CreateInterviewPage() {
             );
 
 
-            /*
-             * Navigate back to interviews.
-             */
-
             setTimeout(() => {
 
                 navigate(
@@ -664,6 +983,48 @@ function CreateInterviewPage() {
         }
 
     };
+const leaveWizard = () => {
+
+    if (loading) {
+        return;
+    }
+
+    const hasWork =
+        Object.values(interview).some((v) => String(v).trim()) ||
+        questions.some((q) => q.question.trim());
+
+    if (
+        hasWork &&
+        !window.confirm(
+            "Leave without creating this interview? What you've entered won't be saved."
+        )
+    ) {
+        return;
+    }
+
+    navigate("/dashboard/interviews");
+};
+
+    /*
+     * Derived values for the settings summary.
+     */
+
+    const videoCount = questions.filter(
+        (q) => q.type === "Video"
+    ).length;
+
+    const textCount = questions.filter(
+        (q) => q.type === "Text"
+    ).length;
+
+    const choiceCount = questions.filter(
+        (q) => q.type === "Multiple Choice" || q.type === "Yes/No"
+    ).length;
+
+    const maxRecordingSeconds =
+        settings.answerTimeLimit === null
+            ? null
+            : videoCount * settings.answerTimeLimit;
 
 
     /*
@@ -819,9 +1180,7 @@ function CreateInterviewPage() {
             </div>
 
 
-            {/* ====================================================
-                ERROR
-            ==================================================== */}
+            {/* ERROR */}
 
             {error && (
 
@@ -834,9 +1193,7 @@ function CreateInterviewPage() {
             )}
 
 
-            {/* ====================================================
-                SUCCESS
-            ==================================================== */}
+            {/* SUCCESS */}
 
             {success && (
 
@@ -1067,322 +1424,150 @@ function CreateInterviewPage() {
             ==================================================== */}
 
             {step === 2 && (
+                <div className="cq-card">
 
-                <div className="content-card questions-card">
-
-
-                    {/* HEADER */}
-
-                    <div className="card-title questions-header">
-
+                    <div className="cq-header">
                         <div>
-
-                            <h2>
-                                Interview Questions
-                            </h2>
-
-                            <p>
-                                Create the questions
-                                that candidates will
-                                answer during this
-                                interview.
-                            </p>
-
+                            <h2>Interview Questions</h2>
+                            <p>Build the questions candidates will answer, in order.</p>
                         </div>
-
-
-                        <button
-                            type="button"
-                            className="add-question-btn"
-                            onClick={
-                                addQuestion
-                            }
-                            disabled={loading}
-                        >
-
+                        <button type="button" className="cq-add-btn" onClick={addQuestion} disabled={loading}>
                             <HiOutlinePlus />
-
                             Add Question
-
                         </button>
-
                     </div>
 
+                    <div className="cq-list">
+                        {questions.map((question, index) => (
+                            <div className="cq-item" key={question.id}>
 
-                    {/* =================================================
-                        QUESTION INFORMATION
-                    ================================================== */}
+                                <div className="cq-item-head">
+                                    <div className="cq-badge">{index + 1}</div>
+                                    <div className="cq-item-title">Question {index + 1}</div>
 
-                    <div className="question-info">
-
-                        <HiOutlineQuestionMarkCircle />
-
-                        <div>
-
-                            <strong>
-                                Build your interview assessment
-                            </strong>
-
-                            <p>
-                                Add questions in the order
-                                you want the candidate to
-                                answer them. You can choose
-                                whether each question requires
-                                a video, text, or yes/no response.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* =================================================
-                        QUESTIONS LIST
-                    ================================================== */}
-
-                    <div className="questions-list">
-
-                        {questions.map(
-                            (
-                                question,
-                                index
-                            ) => (
-
-                                <div
-                                    className="question-card"
-                                    key={question.id}
-                                >
-
-
-                                    {/* QUESTION HEADER */}
-
-                                    <div className="question-card-header">
-
-
-                                        <div className="question-number">
-
-                                            <span>
-                                                Question{" "}
-                                                {index + 1}
-                                            </span>
-
-                                        </div>
-
-
-                                        <div className="question-actions">
-
-
-                                            {/* MOVE UP */}
-
-                                            <button
-                                                type="button"
-                                                title="Move question up"
-                                                onClick={() =>
-                                                    moveQuestionUp(
-                                                        index
-                                                    )
-                                                }
-                                                disabled={
-                                                    index ===
-                                                        0 ||
-                                                    loading
-                                                }
-                                            >
-
-                                                <HiOutlineChevronUp />
-
-                                            </button>
-
-
-                                            {/* MOVE DOWN */}
-
-                                            <button
-                                                type="button"
-                                                title="Move question down"
-                                                onClick={() =>
-                                                    moveQuestionDown(
-                                                        index
-                                                    )
-                                                }
-                                                disabled={
-                                                    index ===
-                                                        questions.length -
-                                                        1 ||
-                                                    loading
-                                                }
-                                            >
-
-                                                <HiOutlineChevronDown />
-
-                                            </button>
-
-
-                                            {/* DELETE */}
-
-                                            <button
-                                                type="button"
-                                                title="Delete question"
-                                                className="delete-question"
-                                                onClick={() =>
-                                                    deleteQuestion(
-                                                        question.id
-                                                    )
-                                                }
-                                                disabled={
-                                                    questions.length ===
-                                                        1 ||
-                                                    loading
-                                                }
-                                            >
-
-                                                <HiOutlineTrash />
-
-                                            </button>
-
-                                        </div>
-
+                                    <div className="cq-tools">
+                                        <button type="button" className="cq-tool" title="Move question up"
+                                            onClick={() => moveQuestionUp(index)}
+                                            disabled={index === 0 || loading}>
+                                            <HiOutlineChevronUp />
+                                        </button>
+                                        <button type="button" className="cq-tool" title="Move question down"
+                                            onClick={() => moveQuestionDown(index)}
+                                            disabled={index === questions.length - 1 || loading}>
+                                            <HiOutlineChevronDown />
+                                        </button>
+                                        <button type="button" className="cq-tool danger" title="Delete question"
+                                            onClick={() => deleteQuestion(question.id)}
+                                            disabled={questions.length === 1 || loading}>
+                                            <HiOutlineTrash />
+                                        </button>
                                     </div>
-
-
-                                    {/* QUESTION TEXT */}
-
-                                    <div className="form-group">
-
-                                        <label>
-                                            Question
-                                        </label>
-
-                                        <textarea
-                                            rows="4"
-                                            value={
-                                                question.question
-                                            }
-                                            onChange={(e) =>
-                                                handleQuestionChange(
-                                                    question.id,
-                                                    "question",
-                                                    e.target.value
-                                                )
-                                            }
-                                            placeholder="Example: Tell us about yourself and your experience in software development."
-                                            disabled={loading}
-                                        />
-
-                                    </div>
-
-
-                                    {/* QUESTION OPTIONS */}
-
-                                    <div className="question-options">
-
-
-                                        {/* RESPONSE TYPE */}
-
-                                        <div className="form-group">
-
-                                            <label>
-                                                Response Type
-                                            </label>
-
-                                            <select
-                                                value={
-                                                    question.type
-                                                }
-                                                onChange={(e) =>
-                                                    handleQuestionChange(
-                                                        question.id,
-                                                        "type",
-                                                        e.target.value
-                                                    )
-                                                }
-                                                disabled={
-                                                    loading
-                                                }
-                                            >
-
-                                                <option value="Video">
-                                                    Video Response
-                                                </option>
-
-                                                <option value="Text">
-                                                    Written Response
-                                                </option>
-
-                                                <option value="Yes/No">
-                                                    Yes / No
-                                                </option>
-
-                                                <option value="Multiple Choice">
-                                                    Multiple Choice
-                                                </option>
-
-                                            </select>
-
-                                        </div>
-
-
-                                        {/* REQUIRED */}
-
-                                        <div className="required-option">
-
-                                            <label>
-
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        question.required
-                                                    }
-                                                    onChange={(e) =>
-                                                        handleQuestionChange(
-                                                            question.id,
-                                                            "required",
-                                                            e.target.checked
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        loading
-                                                    }
-                                                />
-
-                                                <span>
-                                                    Required question
-                                                </span>
-
-                                            </label>
-
-                                        </div>
-
-                                    </div>
-
                                 </div>
 
-                            )
-                        )}
+                                <label className="cq-label">Your question</label>
+                                <textarea
+                                    className="cq-textarea"
+                                    rows="3"
+                                    value={question.question}
+                                    onChange={(e) => handleQuestionChange(question.id, "question", e.target.value)}
+                                    placeholder="Example: Tell us about yourself and your experience in software development."
+                                    disabled={loading}
+                                />
 
+                                <label className="cq-label" style={{ marginTop: 18 }}>Response type</label>
+                                <div className="cq-types" role="radiogroup" aria-label="Response type">
+                                    {QUESTION_TYPES.map(({ value, label, Icon }) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={question.type === value}
+                                            className={`cq-type ${question.type === value ? "selected" : ""}`}
+                                            onClick={() => handleQuestionChange(question.id, "type", value)}
+                                            disabled={loading}
+                                        >
+                                            <Icon />
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {question.type === "Multiple Choice" && (
+                                    <div className="cq-options">
+                                        <label className="cq-label" style={{ marginTop: 18 }}>Answer options</label>
+
+                                        {(question.options || ["", ""]).map((opt, i) => (
+                                            <div className="cq-option-row" key={i}>
+                                                <span className="cq-option-letter">{String.fromCharCode(65 + i)}</span>
+                                                <input
+                                                    className="cq-option-input"
+                                                    value={opt}
+                                                    placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                                                    onChange={(e) => updateOption(question.id, i, e.target.value)}
+                                                    disabled={loading}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="cq-tool danger"
+                                                    title="Remove option"
+                                                    onClick={() => removeOption(question.id, i)}
+                                                    disabled={(question.options?.length || 0) <= 2 || loading}
+                                                >
+                                                    <HiOutlineXMark />
+                                                </button>
+                                            </div>
+                                        ))}
+
+                                        <button
+                                            type="button"
+                                            className="cq-add-option"
+                                            onClick={() => addOption(question.id)}
+                                            disabled={(question.options?.length || 0) >= 6 || loading}
+                                        >
+                                            <HiOutlinePlus /> Add option
+                                        </button>
+
+                                        <label className="cq-switch" style={{ marginTop: 14 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!question.allowMultiple}
+                                                onChange={(e) =>
+                                                    handleQuestionChange(question.id, "allowMultiple", e.target.checked)
+                                                }
+                                                disabled={loading}
+                                            />
+                                            <span className="cq-switch-track" />
+                                            Allow candidates to select multiple answers
+                                        </label>
+                                    </div>
+                                )}
+
+                                <div className="cq-foot">
+                                    <label className="cq-switch">
+                                        <input
+                                            type="checkbox"
+                                            checked={question.required}
+                                            onChange={(e) => handleQuestionChange(question.id, "required", e.target.checked)}
+                                            disabled={loading}
+                                        />
+                                        <span className="cq-switch-track" />
+                                        Required question
+                                    </label>
+                                    <span className="cq-hint">
+                                        {question.required ? "Candidates must answer this" : "Candidates can skip this"}
+                                    </span>
+                                </div>
+
+                            </div>
+                        ))}
                     </div>
 
-
-                    {/* =================================================
-                        ADD QUESTION BOTTOM
-                    ================================================== */}
-
-                    <button
-                        type="button"
-                        className="add-question-bottom"
-                        onClick={
-                            addQuestion
-                        }
-                        disabled={loading}
-                    >
-
+                    <button type="button" className="cq-add-bottom" onClick={addQuestion} disabled={loading}>
                         <HiOutlinePlus />
-
                         Add Another Question
-
                     </button>
 
                 </div>
-
             )}
 
 
@@ -1393,17 +1578,259 @@ function CreateInterviewPage() {
 
             {step === 3 && (
 
-                <div className="content-card coming-soon">
+                <div className="settings-layout">
 
-                    <h2>
-                        Interview Settings
-                    </h2>
+                    <div className="settings-main">
 
-                    <p>
-                        Configure interview duration,
-                        candidate permissions, retakes
-                        and other settings.
-                    </p>
+                        {/* TIMING */}
+
+                        <section className="content-card settings-section">
+
+                            <header className="settings-section-header">
+                                <span className="settings-icon">
+                                    <HiOutlineClock />
+                                </span>
+                                <div>
+                                    <h2>Timing</h2>
+                                    <p>
+                                        Set how long candidates have to
+                                        answer, and when the link closes.
+                                    </p>
+                                </div>
+                            </header>
+
+                            <div className="setting-row stacked">
+                                <div className="setting-text">
+                                    <h3>Answer time limit</h3>
+                                    <p>
+                                        Maximum length of each video answer.
+                                        Recording stops automatically when
+                                        time runs out.
+                                    </p>
+                                </div>
+                                <SegmentedControl
+                                    label="Answer time limit"
+                                    options={TIME_LIMIT_OPTIONS}
+                                    value={settings.answerTimeLimit}
+                                    onChange={(value) =>
+                                        updateSetting("answerTimeLimit", value)
+                                    }
+                                />
+                            </div>
+
+                            <div className="setting-row stacked">
+                                <div className="setting-text">
+                                    <h3>Complete by</h3>
+                                    <p>
+                                        After this date and time, candidates
+                                        can no longer open the interview.
+                                        Leave empty for no deadline.
+                                    </p>
+                                </div>
+                                <div className="deadline-control">
+                                    <input
+                                        type="datetime-local"
+                                        aria-label="Candidate deadline"
+                                        value={settings.candidateDeadline}
+                                        onChange={(e) =>
+                                            updateSetting(
+                                                "candidateDeadline",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                    {settings.candidateDeadline && (
+                                        <button
+                                            type="button"
+                                            className="clear-deadline"
+                                            onClick={() =>
+                                                updateSetting(
+                                                    "candidateDeadline",
+                                                    ""
+                                                )
+                                            }
+                                        >
+                                            <HiOutlineXMark />
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                        </section>
+
+
+                        {/* PERMISSIONS */}
+
+                        <section className="content-card settings-section">
+
+                            <header className="settings-section-header">
+                                <span className="settings-icon">
+                                    <HiOutlineShieldCheck />
+                                </span>
+                                <div>
+                                    <h2>Candidate permissions</h2>
+                                    <p>
+                                        Decide what candidates can do
+                                        while they take the interview.
+                                    </p>
+                                </div>
+                            </header>
+
+                            <div className="setting-row stacked">
+                                <div className="setting-text">
+                                    <h3>Retakes</h3>
+                                    <p>
+                                        How many times a candidate can
+                                        re-record a video answer.
+                                    </p>
+                                </div>
+                                <SegmentedControl
+                                    label="Retakes per video question"
+                                    options={RETAKE_OPTIONS}
+                                    value={settings.maxRetakes}
+                                    onChange={(value) =>
+                                        updateSetting("maxRetakes", value)
+                                    }
+                                />
+                            </div>
+
+                            <ToggleRow
+                                id="back-navigation"
+                                title="Allow going back"
+                                description="Candidates can return to earlier questions before they submit."
+                                checked={settings.allowBackNavigation}
+                                onChange={(value) =>
+                                    updateSetting("allowBackNavigation", value)
+                                }
+                            />
+
+                            <ToggleRow
+                                id="require-consent"
+                                title="Require recording consent"
+                                description="Candidates must agree to being recorded before they can start."
+                                checked={settings.requireConsent}
+                                onChange={(value) =>
+                                    updateSetting("requireConsent", value)
+                                }
+                            />
+
+                        </section>
+
+
+                        {/* WELCOME MESSAGE */}
+
+                        <section className="content-card settings-section">
+
+                            <header className="settings-section-header">
+                                <span className="settings-icon">
+                                    <HiOutlineChatBubbleLeftRight />
+                                </span>
+                                <div>
+                                    <h2>Welcome message</h2>
+                                    <p>
+                                        Shown to candidates before they begin.
+                                        Use it to explain the process or set
+                                        expectations.
+                                    </p>
+                                </div>
+                            </header>
+
+                            <textarea
+                                className="welcome-textarea"
+                                rows={4}
+                                maxLength={WELCOME_MAX_LENGTH}
+                                aria-label="Welcome message"
+                                placeholder="Hi! Thanks for applying. You'll answer a few short questions on video. Find a quiet spot and take your time."
+                                value={settings.welcomeMessage}
+                                onChange={(e) =>
+                                    updateSetting(
+                                        "welcomeMessage",
+                                        e.target.value
+                                    )
+                                }
+                            />
+                            <span className="char-count">
+                                {settings.welcomeMessage.length}
+                                {" / "}
+                                {WELCOME_MAX_LENGTH}
+                            </span>
+
+                        </section>
+
+                    </div>
+
+
+                    {/* LIVE SUMMARY */}
+
+                    <aside className="settings-summary">
+
+                        <div className="content-card">
+
+                            <h2>
+                                <HiOutlineVideoCamera />
+                                Candidate experience
+                            </h2>
+
+                            <dl>
+                                <div>
+                                    <dt>Questions</dt>
+                                    <dd>
+                                        {questions.length}
+                                        <small>
+                                            {videoCount} video,{" "}
+                                            {textCount} text,{" "}
+                                            {choiceCount} choice
+                                        </small>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Answer limit</dt>
+                                    <dd>
+                                        {formatSeconds(settings.answerTimeLimit)}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Max recording</dt>
+                                    <dd>
+                                        {maxRecordingSeconds === null
+                                            ? "No limit"
+                                            : formatSeconds(maxRecordingSeconds)}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>
+                                        <HiOutlineArrowPath /> Retakes
+                                    </dt>
+                                    <dd>{formatRetakes(settings.maxRetakes)}</dd>
+                                </div>
+                                <div>
+                                    <dt>Deadline</dt>
+                                    <dd>
+                                        {formatDeadline(settings.candidateDeadline)}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Going back</dt>
+                                    <dd>
+                                        {settings.allowBackNavigation
+                                            ? "Allowed"
+                                            : "Not allowed"}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Consent</dt>
+                                    <dd>
+                                        {settings.requireConsent
+                                            ? "Required"
+                                            : "Not required"}
+                                    </dd>
+                                </div>
+                            </dl>
+
+                        </div>
+
+                    </aside>
 
                 </div>
 
@@ -1433,73 +1860,46 @@ function CreateInterviewPage() {
 
                     <div className="publish-summary">
 
-
-                        {/* INTERVIEW */}
-
                         <div>
-
-                            <strong>
-                                Interview
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.title ||
-                                    "Not specified"
-                                }
-                            </span>
-
+                            <strong>Interview</strong>
+                            <span>{interview.title || "Not specified"}</span>
                         </div>
 
-
-                        {/* POSITION */}
-
                         <div>
-
-                            <strong>
-                                Position
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.position ||
-                                    "Not specified"
-                                }
-                            </span>
-
+                            <strong>Position</strong>
+                            <span>{interview.position || "Not specified"}</span>
                         </div>
 
-
-                        {/* DEPARTMENT */}
-
                         <div>
-
-                            <strong>
-                                Department
-                            </strong>
-
-                            <span>
-                                {
-                                    interview.department ||
-                                    "Not specified"
-                                }
-                            </span>
-
+                            <strong>Department</strong>
+                            <span>{interview.department || "Not specified"}</span>
                         </div>
 
-
-                        {/* QUESTIONS */}
+                        <div>
+                            <strong>Questions</strong>
+                            <span>{questions.length}</span>
+                        </div>
 
                         <div>
+                            <strong>Answer limit</strong>
+                            <span>{formatSeconds(settings.answerTimeLimit)}</span>
+                        </div>
 
-                            <strong>
-                                Questions
-                            </strong>
+                        <div>
+                            <strong>Retakes</strong>
+                            <span>{formatRetakes(settings.maxRetakes)}</span>
+                        </div>
 
+                        <div>
+                            <strong>Deadline</strong>
+                            <span>{formatDeadline(settings.candidateDeadline)}</span>
+                        </div>
+
+                        <div>
+                            <strong>Consent</strong>
                             <span>
-                                {questions.length}
+                                {settings.requireConsent ? "Required" : "Not required"}
                             </span>
-
                         </div>
 
                     </div>
@@ -1572,66 +1972,40 @@ function CreateInterviewPage() {
 
             <div className="wizard-buttons">
 
-
-                {/* PREVIOUS */}
-
-                <button
-                    type="button"
-                    className="previous-btn"
-                    onClick={
-                        previousStep
-                    }
-                    disabled={
-                        step === 1 ||
-                        loading
-                    }
-                >
-                    ← Previous
-                </button>
-
-
-                {/* NEXT */}
+               <button
+    type="button"
+    className="previous-btn"
+    onClick={step === 1 ? leaveWizard : previousStep}
+    disabled={loading}
+>
+    {step === 1 ? "← Back to Interviews" : "← Previous"}
+</button>
 
                 {step < 4 && (
 
                     <button
                         type="button"
                         className="next-btn"
-                        onClick={
-                            nextStep
-                        }
-                        disabled={
-                            loading
-                        }
+                        onClick={nextStep}
+                        disabled={loading}
                     >
-
                         Next →
-
                     </button>
 
                 )}
-
-
-                {/* CREATE */}
 
                 {step === 4 && (
 
                     <button
                         type="button"
                         className="next-btn"
-                        onClick={
-                            createInterview
-                        }
-                        disabled={
-                            loading
-                        }
+                        onClick={createInterview}
+                        disabled={loading}
                     >
-
                         {loading
                             ? "Creating..."
                             : "Create Interview"
                         }
-
                     </button>
 
                 )}

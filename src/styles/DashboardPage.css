@@ -187,12 +187,34 @@ a:focus {
 }
 
 .menu-icon {
-  font-size: 24px;
-  color: ghostwhite;
-  min-width: 28px;
+  font-size: 16px;
+  color: #ffffff;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar nav a:hover .menu-icon {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.sidebar nav a.active .menu-icon {
+  background: #ffffff;
+  color: #243b8f;
+}
+
+.logout-btn .menu-icon {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.logout-btn:hover .menu-icon {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .logout-btn {
@@ -1162,4 +1184,8 @@ a:focus {
     margin-left: 270px;
     margin-right: auto;
   }
+}
+.status-active {
+  background: #dcfce7;
+  color: #166534;
 }

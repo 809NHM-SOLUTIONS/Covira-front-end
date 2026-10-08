@@ -1,5 +1,6 @@
 .candidate-interview-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f6f8fb;
   color: #1f2937;
 }
@@ -54,7 +55,7 @@
 
 .progress-bar-fill {
   height: 100%;
-  background: #111827;
+  background: #00a99d;
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -101,7 +102,7 @@
   margin-bottom: 20px;
 }
 
-.question-number {
+.candidate-question-label {
   display: inline-block;
   margin-bottom: 14px;
   font-size: 13px;
@@ -244,12 +245,12 @@
 .camera-button,
 .next-question-button,
 .submit-interview-button {
-  background: #111827;
+  background: #243b8f;
   color: #ffffff;
 }
 
 .record-button {
-  background: #111827;
+  background: #243b8f;
   color: #ffffff;
 }
 
@@ -385,5 +386,191 @@
 
   .candidate-question-navigation button {
     width: 100%;
+  }
+}
+
+
+/* =========================================================
+   REGISTRATION SCREEN
+========================================================= */
+
+.candidate-welcome {
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid #b7ebe6;
+  background: #e6f8f6;
+  color: #0b4f4a;
+  line-height: 1.65;
+  font-size: 15px;
+}
+
+.candidate-welcome p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.expect-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.expect-list li {
+  position: relative;
+  padding-left: 26px;
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.expect-list li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00a99d;
+}
+
+.candidate-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.candidate-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.candidate-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #fff;
+  color: #101828;
+  font-family: inherit;
+  /* 16px stops iOS Safari zooming the page on focus */
+  font-size: 16px;
+}
+
+.candidate-field input:focus {
+  outline: none;
+  border-color: #00a99d;
+  box-shadow: 0 0 0 3px rgba(0, 169, 157, 0.18);
+}
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.consent-check input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: #243b8f;
+}
+
+.candidate-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.candidate-form-actions .next-question-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Keep "Next" on the right when "Previous" is hidden */
+.candidate-question-navigation .next-question-button,
+.candidate-question-navigation .submit-interview-button {
+  margin-left: auto;
+}
+
+.recording-controls button:focus-visible,
+.candidate-question-navigation button:focus-visible,
+.next-question-button:focus-visible,
+.consent-check input:focus-visible {
+  outline: 3px solid rgba(0, 169, 157, 0.5);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .candidate-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-form-actions .next-question-button {
+    width: 100%;
+  }
+
+  /* Video keeps a sensible shape instead of a fixed pixel height */
+  .video-container {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .candidate-camera,
+  .recorded-video {
+    height: 100%;
+  }
+
+  /* Question navigation stays reachable while scrolling */
+  .candidate-question-navigation {
+    position: sticky;
+    bottom: 0;
+    margin: 20px -20px 0;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: #f6f8fb;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .candidate-question-navigation .next-question-button,
+  .candidate-question-navigation .submit-interview-button {
+    margin-left: 0;
+  }
+
+  .recording-controls button {
+    flex: 1 1 100%;
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .progress-bar-fill,
+  .loading-spinner {
+    transition: none;
+    animation-duration: 2s;
   }
 }

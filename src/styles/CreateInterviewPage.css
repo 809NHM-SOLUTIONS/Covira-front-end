@@ -594,3 +594,444 @@
     }
 
 }
+
+
+/* =========================================================
+   STEP 3 - INTERVIEW SETTINGS
+========================================================= */
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+    align-items: start;
+}
+
+.settings-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.settings-section {
+    padding: 28px 32px;
+}
+
+.settings-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 20px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.settings-section-header h2 {
+    margin: 0 0 4px;
+    color: #123f91;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.settings-section-header p {
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.settings-icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e6f8f6;
+    color: #00a99d;
+    font-size: 20px;
+}
+
+/* ---------- rows ---------- */
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid #f2f4f7;
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.setting-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.setting-text {
+    min-width: 0;
+    max-width: 560px;
+}
+
+.setting-text h3 {
+    margin: 0 0 4px;
+    color: #101828;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.setting-text p {
+    margin: 0;
+    color: #667085;
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+/* ---------- segmented control ---------- */
+
+.segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.segment {
+    min-height: 40px;
+    padding: 0 18px;
+    border: 1px solid #d0d5dd;
+    border-radius: 999px;
+    background: #fff;
+    color: #344054;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.segment:hover {
+    background: #f9fafb;
+}
+
+.segment.active {
+    background: #243b8f;
+    border-color: #243b8f;
+    color: #fff;
+}
+
+.segment:focus-visible,
+.switch:focus-visible,
+.clear-deadline:focus-visible {
+    outline: 3px solid rgba(0, 169, 157, 0.45);
+    outline-offset: 2px;
+}
+
+/* ---------- switch ---------- */
+
+.switch {
+    flex: 0 0 auto;
+    position: relative;
+    width: 46px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #d0d5dd;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.switch.on {
+    background: #00a99d;
+}
+
+.switch-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.25);
+    transition: transform 0.2s;
+}
+
+.switch.on .switch-thumb {
+    transform: translateX(20px);
+}
+
+/* ---------- deadline + welcome ---------- */
+
+.deadline-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.deadline-control input[type="datetime-local"] {
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #d0d5dd;
+    border-radius: 9px;
+    background: #fff;
+    color: #344054;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.deadline-control input[type="datetime-local"]:focus,
+.welcome-textarea:focus {
+    outline: none;
+    border-color: #00a99d;
+    box-shadow: 0 0 0 3px rgba(0, 169, 157, 0.15);
+}
+
+.clear-deadline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background: #f2f4f7;
+    color: #475467;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.welcome-textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid #d0d5dd;
+    border-radius: 9px;
+    color: #344054;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 110px;
+}
+
+.welcome-textarea::placeholder {
+    color: #98a2b3;
+}
+
+.char-count {
+    display: block;
+    margin-top: 6px;
+    text-align: right;
+    color: #98a2b3;
+    font-size: 12px;
+}
+
+/* ---------- live summary ---------- */
+
+.settings-summary {
+    position: sticky;
+    top: 24px;
+}
+
+.settings-summary .content-card {
+    padding: 24px;
+}
+
+.settings-summary h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    color: #123f91;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.settings-summary dl {
+    margin: 0;
+}
+
+.settings-summary dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid #f2f4f7;
+}
+
+.settings-summary dl > div:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.settings-summary dt {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #667085;
+    font-size: 13.5px;
+}
+
+.settings-summary dd {
+    margin: 0;
+    text-align: right;
+    color: #101828;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.settings-summary dd small {
+    display: block;
+    margin-top: 2px;
+    color: #98a2b3;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+/* =========================================================
+   STEP 4 - PUBLISH (previously unstyled)
+========================================================= */
+
+.publish-card h2 {
+    margin: 0 0 6px;
+    color: #123f91;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.publish-card > p {
+    margin: 0 0 24px;
+    color: #667085;
+    font-size: 14px;
+}
+
+.publish-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.publish-summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid #eaecf0;
+    border-radius: 12px;
+    background: #f9fafb;
+}
+
+.publish-summary strong {
+    color: #667085;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.publish-summary span {
+    color: #101828;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.publish-questions h3 {
+    margin: 0 0 12px;
+    color: #101828;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.publish-question {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f2f4f7;
+}
+
+.publish-question:last-child {
+    border-bottom: none;
+}
+
+.publish-question > span {
+    flex: 0 0 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2ff;
+    color: #243b8f;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.publish-question strong {
+    display: block;
+    color: #101828;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.publish-question small {
+    display: block;
+    margin-top: 3px;
+    color: #667085;
+    font-size: 12.5px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 960px) {
+
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-summary {
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .settings-section {
+        padding: 22px 18px;
+    }
+
+    .setting-row {
+        gap: 16px;
+    }
+
+    .segment {
+        flex: 1 1 auto;
+    }
+
+    .deadline-control input[type="datetime-local"] {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .segment,
+    .switch,
+    .switch-thumb {
+        transition: none;
+    }
+}

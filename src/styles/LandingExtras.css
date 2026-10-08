@@ -1,0 +1,46 @@
+/* ===== Hero card ===== */
+.hc-card{position:relative;width:100%;max-width:500px;background:#141B34;border:1px solid #263056;border-radius:30px;padding:24px;color:#F1F5F9;text-align:left;box-shadow:0 30px 70px rgba(18,11,78,.35)}
+.hc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:700}
+.hc-rec{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#DC2626;background:#FEF2F2;padding:6px 14px;border-radius:999px}
+.hc-rec i{width:8px;height:8px;border-radius:50%;background:#DC2626;animation:hcPulse 1.4s infinite}
+@keyframes hcPulse{50%{opacity:.3}}
+.hc-cam{position:relative;height:250px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#1E3A8A,#4C1D95 65%,#7C3AED)}
+.hc-cam svg{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:210px;height:210px;fill:rgba(255,255,255,.22)}
+.hc-time{position:absolute;top:14px;left:14px;background:rgba(11,16,32,.6);color:#fff;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;z-index:1}
+.hc-q{margin-top:16px;background:#0B1020;border-radius:18px;padding:18px 20px}
+.hc-q small{color:#94A3B8}
+.hc-q h3{margin:6px 0 14px;font-size:21px;color:#fff}
+.hc-bar{height:6px;border-radius:99px;background:#263056;overflow:hidden}
+.hc-bar div{height:100%;width:40%;background:linear-gradient(90deg,#2563EB,#7C3AED)}
+.hc-float{position:absolute;display:flex;align-items:center;gap:10px;background:#141B34;border:1px solid #263056;border-radius:16px;padding:12px 18px;font-weight:700;font-size:14px;color:#F1F5F9;box-shadow:0 18px 40px rgba(0,0,0,.3)}
+.hc-float i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-style:normal;color:#fff;background:linear-gradient(135deg,#2563EB,#7C3AED)}
+.hc-f1{left:-36px;bottom:150px}
+.hc-f2{right:-30px;top:60px}
+
+@media(max-width:700px){
+  .hc-card{max-width:100%;padding:18px}
+  .hc-cam{height:210px}
+  .hc-float{padding:9px 13px;font-size:13px}
+  .hc-float i{width:28px;height:28px}
+  .hc-f1{left:10px;bottom:150px}
+  .hc-f2{right:10px;top:74px}
+}
+
+/* ===== Tighter spacing ===== */
+.hero{min-height:auto;padding-bottom:60px}
+.features,.how-section,.why-section,.pricing-section,.about-section,
+.testimonial-section,.faq-section,.cta-section{padding-top:80px;padding-bottom:80px}
+.section-header{margin-bottom:50px}
+.steps,.pricing-grid,.testimonial-grid{margin-top:50px}
+
+/* ===== CTA buttons ===== */
+.cta-buttons{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:28px}
+.cta-buttons .primary-btn{background:#fff;color:#2563EB;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.cta-buttons .secondary-btn{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.75)}
+.cta-buttons .secondary-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+
+/* ===== Pricing ===== */
+.pricing-card{background:#fff;border:1px solid #dbe3f5}
+.pricing-card.featured{background:linear-gradient(135deg,#2563EB,#7C3AED);border-color:transparent}
+.pricing-card .primary-btn{width:100%}
+.pricing-card.featured .primary-btn{background:#fff;color:#2563EB}

@@ -1,4 +1,5 @@
 import "../styles/LandingPage.css";
+import "../styles/LandingExtras.css";
 import { useState, useEffect } from "react";
 import {Link, useNavigate} from "react-router-dom";
 import {
@@ -156,77 +157,31 @@ function LandingPage() {
 
                 </div>
 
-                <div className="hero-right">
+               <div className="hero-right">
+    <div className="hc-card">
+        <div className="hc-top">
+            <span>Interview Session</span>
+            <span className="hc-rec"><i /> Recording</span>
+        </div>
 
-                    <div className="dashboard-card">
+        <div className="hc-cam">
+            <span className="hc-time">⏱ 01:45</span>
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="40" r="22" />
+                <path d="M14 120c0-28 20-44 46-44s46 16 46 44z" />
+            </svg>
+        </div>
 
-                        <div className="dashboard-header">
+        <div className="hc-q">
+            <small>Question 2 of 5</small>
+            <h3>Tell us about yourself.</h3>
+            <div className="hc-bar"><div /></div>
+        </div>
 
-                            <div className="dashboard-title">
-
-                                Interview Session
-
-                            </div>
-
-                            <div className="live-badge">
-
-                                ● LIVE
-
-                            </div>
-
-                        </div>
-
-                        <div className="candidate-video">
-
-                            <div className="play-circle">
-
-                                ▶
-
-                            </div>
-
-                        </div>
-
-                        <div className="question-card">
-
-                            <small>
-
-                                Question 2 of 5
-
-                            </small>
-
-                            <h3>
-
-                                Tell us about yourself.
-
-                            </h3>
-
-                            <div className="timer">
-
-                                ⏱ 01:45 Remaining
-
-                            </div>
-
-                        </div>
-
-                        <div className="dashboard-footer">
-
-                            <button className="record-btn">
-
-                                Recording
-
-                            </button>
-
-                            <button className="submit-btn">
-
-                                Submit
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
+        <div className="hc-float hc-f1"><i>✓</i>Answer saved</div>
+        <div className="hc-float hc-f2"><i>▶</i>Video uploaded</div>
+    </div>
+</div>
 
             </section>
             {/* TRUSTED COMPANIES */}

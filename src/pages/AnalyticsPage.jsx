@@ -125,6 +125,15 @@ function isVideoResponse(response) {
   );
 }
 
+function isChoiceResponse(response) {
+  const type = getQuestionType(response);
+
+  return (
+    type.startsWith("MULTIPLE") ||
+    type.replace(/[^A-Z]/g, "") === "YESNO"
+  );
+}
+
 function getVideoUrl(rawVideoUrl) {
   if (!rawVideoUrl) return "";
 
@@ -277,6 +286,7 @@ function AnalyticsPage() {
   const [responseFormatStats, setResponseFormatStats] = useState({
     video: 0,
     text: 0,
+    choice: 0,
     other: 0,
     sampleSize: 0,
   });
@@ -298,6 +308,7 @@ function AnalyticsPage() {
       setResponseFormatStats({
         video: 0,
         text: 0,
+        choice: 0,
         other: 0,
         sampleSize: 0,
       });
@@ -373,6 +384,7 @@ function AnalyticsPage() {
       const formatCounts = {
         video: 0,
         text: 0,
+         choice: 0, 
         other: 0,
       };
 
@@ -380,7 +392,11 @@ function AnalyticsPage() {
         detail.responses.forEach((response) => {
           if (isVideoResponse(response)) {
             formatCounts.video += 1;
-          } else if (
+          
+          }
+           else if (isChoiceResponse(response)) {
+      formatCounts.choice += 1;}
+           else if (
             String(response?.answer ?? "").trim() !== ""
           ) {
             formatCounts.text += 1;
@@ -591,9 +607,10 @@ function AnalyticsPage() {
 
     return allInterviews.map((interview) => {
       const matched = candidates.filter(
-        (c) => c.interview === interview.title
-      );
-
+        (c) => c.interviewId != null
+    ? Number(c.interviewId) === Number(interview.id)
+    : c.interview === interview.title
+);
       const responded = matched.filter(
         (c) =>
           String(c.status || "").toLowerCase() !==
@@ -680,7 +697,10 @@ function AnalyticsPage() {
       days.map((d) => [d.key, d])
     );
 
+    
     candidates.forEach((candidate) => {
+        if (String(candidate.status || "").toLowerCase() === "pending") return;
+
       const time = timestampOf(candidate);
 
       if (!time) return;
@@ -821,6 +841,9 @@ function AnalyticsPage() {
           timestampOf(b)
       );
   }, [candidates]);
+
+const awaitingTotal =
+  candidates.length > 0 ? needsReviewAll.length : awaitingReviewCount;
 
   const needsReview = useMemo(
     () => needsReviewAll.slice(0, 5),
@@ -1114,7 +1137,7 @@ function AnalyticsPage() {
           </div>
 
           <div>
-            <h3>{needsReviewAll.length}</h3>
+            <h3>{awaitingTotal}</h3>
             <span>Awaiting Review</span>
           </div>
         </div>
@@ -1351,7 +1374,7 @@ function AnalyticsPage() {
               </span>
 
               <strong>
-                {awaitingReviewCount}
+                {awaitingTotal}
               </strong>
             </div>
 
@@ -1376,69 +1399,44 @@ function AnalyticsPage() {
             </h2>
 
             <p className="analytics-card-subtitle">
-              Video vs. text answers across
-              recent submissions.
+              Video, written and choice answers across recent submissions.
             </p>
 
             
-            {(() => {
-              const totalAnswers =
-                responseFormatStats.video +
-                responseFormatStats.text +
-                responseFormatStats.other;
+           {(() => {
+  const total =
+    responseFormatStats.video +
+    responseFormatStats.text +
+    responseFormatStats.choice +
+    responseFormatStats.other;
 
-              const videoPct =
-                totalAnswers > 0
-                  ? Math.round(
-                      (responseFormatStats.video /
-                        totalAnswers) *
-                        100
-                    )
-                  : 0;
+  const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
-              const textPct =
-                totalAnswers > 0
-                  ? Math.round(
-                      (responseFormatStats.text /
-                        totalAnswers) *
-                        100
-                    )
-                  : 0;
+  return (
+    <div className="analytics-status-grid">
+      <div className="analytics-status-pill">
+        <span className="status-badge status-completed">
+          <HiOutlineVideoCamera style={{ marginRight: "4px" }} />
+          Video
+        </span>
+        <strong>{pct(responseFormatStats.video)}%</strong>
+      </div>
 
-              return (
-                <div className="analytics-status-grid">
-                  <div className="analytics-status-pill">
-                    <span className="status-badge status-completed">
-                      <HiOutlineVideoCamera
-                        style={{
-                          marginRight: "4px",
-                        }}
-                      />
-                      Video
-                    </span>
+      <div className="analytics-status-pill">
+        <span className="status-badge status-reviewed">
+          <HiOutlineDocumentText style={{ marginRight: "4px" }} />
+          Written
+        </span>
+        <strong>{pct(responseFormatStats.text)}%</strong>
+      </div>
 
-                    <strong>
-                      {videoPct}%
-                    </strong>
-                  </div>
-
-                  <div className="analytics-status-pill">
-                    <span className="status-badge status-reviewed">
-                      <HiOutlineDocumentText
-                        style={{
-                          marginRight: "4px",
-                        }}
-                      />
-                      Text
-                    </span>
-
-                    <strong>
-                      {textPct}%
-                    </strong>
-                  </div>
-                </div>
-              );
-            })()}
+      <div className="analytics-status-pill">
+        <span className="status-badge status-pending">Choice</span>
+        <strong>{pct(responseFormatStats.choice)}%</strong>
+      </div>
+    </div>
+  );
+})()}
           </section>
         )}
       </div>
