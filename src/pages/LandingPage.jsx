@@ -505,90 +505,75 @@ function LandingPage() {
                 </div>
 
             </section>
-            {/* PRICING */}
-           <section id="pricing" className="pricing-section">
+          {/* PRICING */}
+<section id="pricing" className="pricing-section">
+    <div className="section-header">
+        <span>PRICING</span>
+        <h2>
+            Simple Pricing For Every Business
+        </h2>
+        <p>
+            Start for free and upgrade as your hiring needs grow.
+        </p>
+    </div>
 
-                <div className="section-header">
+    <div className="pricing-grid">
+        {/* Starter Plan (Pure White) */}
+        <div className="pricing-card">
+            <h3>Starter</h3>
+            <h1>R40<span>/month</span></h1>
+            <p>Perfect for individuals and small businesses getting started.</p>
+            <ul>
+                <li>✔ Up to 5 interview assessments per month</li>
+                <li>✔ Video interviews and question read-aloud</li>
+                <li>✔ Unique interview links</li>
+                <li>✔ Interview completion tracking</li>
+                <li>✔ Candidate response review</li>
+            </ul>
+            <button className="primary-btn" onClick={() => navigate("/register")}>
+                Get Started 
+            </button>
+        </div>
 
-                    <span>PRICING</span>
+        {/* Basic Plan (White-to-Blue Ombre) */}
+        <div className="pricing-card basic-ombre">
+            <h3>Basic</h3>
+            <h1>R185<span>/month</span></h1>
+            <p>Ideal for small businesses hiring regularly.</p>
+            <ul>
+                <li>✔ Up to 30 interview assessments per month</li>
+                <li>✔ All Starter features included</li>
+                <li>✔ Candidate management and shortlisting</li>
+                <li>✔ Interview scorecards and evaluation notes</li>
+                <li>✔ Email notifications</li>
+                <li>✔ Basic interview reports</li>
+            </ul>
+            <button className="primary-btn" onClick={() => navigate("/register")}>
+                Get Started 
+            </button>
+        </div>
 
-                    <h2>
-                        Simple Pricing For Every Business
-                    </h2>
-
-                    <p>
-                        Start for free and upgrade as your hiring needs grow.
-                    </p>
-
-                </div>
-
-                <div className="pricing-grid">
-
-                    <div className="pricing-card">
-
-                        <h3>Starter</h3>
-
-                        <h1>Free</h1>
-
-                        <p>Perfect for small businesses.</p>
-
-                        <ul>
-
-                            <li>✔ 10 Interviews</li>
-
-                            <li>✔ Video Responses</li>
-
-                            <li>✔ Interview Links</li>
-
-                            <li>✔ Basic Dashboard</li>
-
-                            <li>✔ Email Support</li>
-
-                        </ul>
-
-                        <button className="primary-btn" onClick={() => navigate("/register")}>
-                            Get Started Free
-                        </button>
-
-                    </div>
-
-                    <div className="pricing-card featured">
-
-                        <div className="popular-tag">
-                            MOST POPULAR
-                        </div>
-
-                        <h3>Professional</h3>
-
-                        <h1>R299<span>/month</span></h1>
-
-                        <p>Designed for growing businesses.</p>
-
-                        <ul>
-
-                            <li>✔ Unlimited Interviews</li>
-
-                            <li>✔ Unlimited Candidates</li>
-
-                            <li>✔ Analytics Dashboard</li>
-
-                            <li>✔ Candidate Management</li>
-
-                            <li>✔ Priority Support</li>
-
-                            <li>✔ Cloud Storage</li>
-
-                        </ul>
-
-                        <button className="primary-btn">
-                            Choose Plan
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
+        {/* Professional Plan (Logo-inspired Deep Blue Gradient) */}
+        <div className="pricing-card featured professional-blue">
+            <div className="popular-tag">
+                MOST POPULAR
+            </div>
+            <h3>Professional</h3>
+            <h1>R350<span>/month</span></h1>
+            <p>Designed for growing businesses with higher recruitment needs.</p>
+            <ul>
+                <li>✔ Up to 100 interview assessments per month</li>
+                <li>✔ All Basic features included</li>
+                <li>✔ Side-by-side candidate comparison</li>
+                <li>✔ Advanced recruitment analytics</li>
+                <li>✔ PDF and CSV report exports</li>
+            </ul>
+            <button className="primary-btn" onClick={() => navigate("/register")}>
+                Choose Plan
+            </button>
+        </div>
+    </div>
+</section>
 
             {/* FAQ */}
             <section className="faq-section">
