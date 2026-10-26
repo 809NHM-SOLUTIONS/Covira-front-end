@@ -274,6 +274,7 @@ function timestampOf(candidate) {
 function AnalyticsPage() {
   const [summary, setSummary] = useState(null);
   const [candidates, setCandidates] = useState([]);
+  
   const [allInterviews, setAllInterviews] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -872,7 +873,39 @@ const awaitingTotal =
    * =========================================================
    */
 
-  const handleExportCsv = () => {
+  // Interviews that can have their own report.
+  const reportInterviews = Array.isArray(allInterviews)
+    ? allInterviews
+    : interviewsWithCounts;
+
+  /*
+   * What a report covers: one interview, or everything when no
+   * interview is given. Returns the matching candidates plus a
+   * file-name suffix such as "-it-support".
+   */
+  const scopeFor = (interview) => ({
+    interview: interview || null,
+    candidates: interview
+      ? candidates.filter((c) =>
+          c.interviewId != null
+            ? Number(c.interviewId) === Number(interview.id)
+            : c.interview === interview.title
+        )
+      : candidates,
+    suffix: interview
+      ? "-" +
+        String(interview.title || "interview")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+      : "",
+  });
+
+  const handleExportCsv = (interview = null) => {
+    const scope = scopeFor(interview);
+    const candidates = scope.candidates;
+    const reportFileSuffix = scope.suffix;
+
     const header = [
       "Name",
       "Email",
@@ -926,7 +959,7 @@ const awaitingTotal =
 
     link.href = url;
 
-    link.download = `covira-candidates-${new Date()
+    link.download = `covira-candidates${reportFileSuffix}-${new Date()
       .toISOString()
       .slice(0, 10)}.csv`;
 
@@ -936,6 +969,223 @@ const awaitingTotal =
 
     document.body.removeChild(link);
 
+    URL.revokeObjectURL(url);
+  };
+
+
+  /*
+   * =========================================================
+   * FULL REPORT (CSV)
+   * =========================================================
+   *
+   * One file with three sections:
+   *   1. Summary   - totals, cross-checked against the dashboard
+   *   2. Interviews - per-interview candidate counts
+   *   3. Response history - one row per candidate answer
+   *
+   * A UTF-8 byte-order mark is added so Excel shows accented
+   * names correctly.
+   */
+  const handleDownloadReport = (interview = null) => {
+    const scope = scopeFor(interview);
+    const candidates = scope.candidates;
+    const selectedReportInterview = scope.interview;
+    const reportFileSuffix = scope.suffix;
+
+    const isPending = (c) =>
+      String(c.status || "").toLowerCase() === "pending";
+
+    const statusCount = (name) =>
+      candidates.filter(
+        (c) =>
+          String(c.status || "").toLowerCase() === name
+      ).length;
+
+    const interviewList = selectedReportInterview
+      ? [selectedReportInterview]
+      : reportInterviews;
+
+    const reportTotals = {
+      interviews: interviewList.length,
+      candidates: candidates.length,
+      completed: candidates.filter((c) => !isPending(c))
+        .length,
+      pending: candidates.filter(isPending).length,
+    };
+
+    // The dashboard figures cover every interview, so they can only be
+    // compared with a report that covers every interview too.
+    const dashboardTotals = selectedReportInterview
+      ? {}
+      : {
+          interviews: stats.totalInterviews,
+          candidates: stats.totalCandidates,
+          completed: stats.completedInterviews,
+          pending: stats.pendingResponses,
+        };
+
+    const matchLabel = (a, b) =>
+      b === undefined || b === null
+        ? "n/a"
+        : Number(a) === Number(b)
+        ? "Match"
+        : "MISMATCH";
+
+    const absoluteUrl = (url) => {
+      if (!url) return "";
+      return /^https?:\/\//i.test(url)
+        ? url
+        : `${API_BASE_URL}${
+            url.startsWith("/") ? "" : "/"
+          }${url}`;
+    };
+
+    const rows = [];
+
+    rows.push(["COVIRA INTERVIEW REPORT"]);
+    rows.push([
+      "Generated",
+      new Date().toLocaleString(DATE_LOCALE),
+    ]);
+    rows.push([
+      "Interview",
+      selectedReportInterview
+        ? selectedReportInterview.title || ""
+        : "All interviews",
+    ]);
+    rows.push([]);
+
+    rows.push(["SUMMARY"]);
+    rows.push([
+      "Metric",
+      "Report value",
+      "Dashboard value",
+      "Check",
+    ]);
+    [
+      ["Total interviews created", "interviews"],
+      ["Total candidates", "candidates"],
+      ["Total completed interviews", "completed"],
+      ["Total pending interviews", "pending"],
+    ].forEach(([label, key]) => {
+      rows.push([
+        label,
+        reportTotals[key],
+        dashboardTotals[key] ?? "",
+        matchLabel(
+          reportTotals[key],
+          dashboardTotals[key]
+        ),
+      ]);
+    });
+    rows.push([
+      "Shortlisted",
+      statusCount("shortlisted"),
+    ]);
+    rows.push([
+      "Rejected",
+      statusCount("rejected"),
+    ]);
+    rows.push([]);
+
+    rows.push(["INTERVIEWS"]);
+    rows.push([
+      "Interview",
+      "Position",
+      "Created",
+      "Candidates",
+      "Completed",
+      "Pending",
+    ]);
+    interviewList.forEach((interview) => {
+      const matched = candidates.filter((c) =>
+        c.interviewId != null
+          ? Number(c.interviewId) ===
+            Number(interview.id)
+          : c.interview === interview.title
+      );
+      rows.push([
+        interview.title || "",
+        interview.position || "",
+        interview.createdAt || "",
+        matched.length,
+        matched.filter((c) => !isPending(c)).length,
+        matched.filter(isPending).length,
+      ]);
+    });
+    rows.push([]);
+
+    rows.push(["CANDIDATE RESPONSE HISTORY"]);
+    rows.push([
+      "Candidate",
+      "Email",
+      "Interview",
+      "Candidate status",
+      "Submitted",
+      "Question no.",
+      "Question",
+      "Answer",
+      "Video link",
+      "Response saved",
+    ]);
+    candidates.forEach((c) => {
+      const responses = getResponseList(c);
+
+      if (responses.length === 0) {
+        rows.push([
+          c.name || "",
+          c.email || "",
+          c.interview || "",
+          c.status || "",
+          c.submittedAt || "",
+          "",
+          "(no responses)",
+        ]);
+        return;
+      }
+
+      [...responses]
+        .sort(
+          (a, b) =>
+            (a.questionNumber || 0) -
+            (b.questionNumber || 0)
+        )
+        .forEach((r) => {
+          rows.push([
+            c.name || "",
+            c.email || "",
+            c.interview || "",
+            c.status || "",
+            c.submittedAt || "",
+            r.questionNumber ?? "",
+            r.question || "",
+            r.answer || "",
+            absoluteUrl(getRawVideoUrl(r)),
+            r.submittedAt || "",
+          ]);
+        });
+    });
+
+    const escapeCell = (value) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const csvContent = rows
+      .map((row) => row.map(escapeCell).join(","))
+      .join("\r\n");
+
+    const blob = new Blob(["\ufeff" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `covira-report${reportFileSuffix}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
@@ -1115,17 +1365,33 @@ const awaitingTotal =
           </p>
         </div>
 
+        <div className="analytics-header-actions">
         <button
           type="button"
           className="analytics-secondary-btn"
-          onClick={handleExportCsv}
+          onClick={() => handleDownloadReport()}
+          disabled={
+            loading ||
+            (candidates.length === 0 &&
+              !(allInterviews && allInterviews.length))
+          }
+        >
+          <HiOutlineDocumentText />
+          Full Report (all interviews)
+        </button>
+
+        <button
+          type="button"
+          className="analytics-secondary-btn"
+          onClick={() => handleExportCsv()}
           disabled={
             candidates.length === 0
           }
         >
           <HiOutlineArrowDownTray />
-          Export Candidates CSV
+          Candidates CSV (all)
         </button>
+        </div>
       </div>
 
       {/* ==================== OVERVIEW STATS ==================== */}
@@ -1177,6 +1443,62 @@ const awaitingTotal =
           </div>
         </div>
       </div>
+
+      {/* ==================== DOWNLOAD REPORTS ==================== */}
+
+      {interviewsWithCounts.length > 0 && (
+        <section className="analytics-card">
+          <h2>
+            <HiOutlineArrowDownTray className="analytics-card-title-icon" />
+            Download Reports
+          </h2>
+
+          <p className="analytics-card-subtitle">
+            Get the report or the candidate list for a single interview
+            with one click.
+          </p>
+
+          <div className="analytics-report-list">
+            {interviewsWithCounts.map((interview) => (
+              <div
+                className="analytics-report-row"
+                key={interview.id ?? interview.title}
+              >
+                <div className="analytics-report-info">
+                  <strong>{interview.title || "Untitled interview"}</strong>
+
+                  <span>
+                    {interview.candidateCount ?? 0} candidate
+                    {(interview.candidateCount ?? 0) === 1 ? "" : "s"}
+                    {" · "}
+                    {interview.completedResponseCount ?? 0} responded
+                  </span>
+                </div>
+
+                <div className="analytics-report-actions">
+                  <button
+                    type="button"
+                    className="analytics-secondary-btn"
+                    onClick={() => handleDownloadReport(interview)}
+                  >
+                    <HiOutlineDocumentText />
+                    Report
+                  </button>
+
+                  <button
+                    type="button"
+                    className="analytics-secondary-btn"
+                    onClick={() => handleExportCsv(interview)}
+                  >
+                    <HiOutlineArrowDownTray />
+                    Candidates CSV
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ==================== NEEDS ATTENTION ==================== */}
 

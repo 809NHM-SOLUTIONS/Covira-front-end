@@ -13,6 +13,8 @@ import {
   HiOutlineListBullet,
   HiOutlineXMark,
   HiOutlineArrowLeft,
+  HiOutlineArrowUp,
+  HiOutlineArrowDown,
 } from "react-icons/hi2";
 
 const API_BASE_URL = "http://localhost:8081";
@@ -56,6 +58,7 @@ function QuestionsPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   // null = adding a new question, otherwise the id being edited
   const [editingId, setEditingId] = useState(null);
@@ -315,6 +318,63 @@ function QuestionsPage() {
     } catch (err) {
       console.error("Delete question error:", err);
       setError(err.message || "Unable to delete question.");
+    }
+  };
+
+  // ============================================================
+  // REORDER
+  // ============================================================
+
+  const moveQuestion = async (index, direction) => {
+    const target = index + direction;
+
+    if (
+      locked ||
+      reordering ||
+      target < 0 ||
+      target >= questions.length
+    ) {
+      return;
+    }
+
+    const previous = questions;
+    const reordered = [...questions];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+
+    // Show the new order straight away, then confirm with the server.
+    setQuestions(reordered);
+    setReordering(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/interviews/${interviewId}/questions/reorder`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            questionIds: reordered.map((q) => q.id),
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        setQuestions(previous);
+        setError("Your session has expired. Please log in again.");
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to save the new order.");
+      }
+    } catch (err) {
+      console.error("Reorder questions error:", err);
+      setQuestions(previous);
+      setError(err.message || "Unable to reorder questions.");
+    } finally {
+      setReordering(false);
     }
   };
 
@@ -611,6 +671,28 @@ function QuestionsPage() {
                 </div>
 
                 <div className="mq-actions">
+                  <button
+                    type="button"
+                    className="mq-icon-btn"
+                    title={locked ? "This interview can no longer be edited" : "Move up"}
+                    aria-label={`Move question ${index + 1} up`}
+                    onClick={() => moveQuestion(index, -1)}
+                    disabled={locked || reordering || index === 0}
+                  >
+                    <HiOutlineArrowUp />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="mq-icon-btn"
+                    title={locked ? "This interview can no longer be edited" : "Move down"}
+                    aria-label={`Move question ${index + 1} down`}
+                    onClick={() => moveQuestion(index, 1)}
+                    disabled={locked || reordering || index === questions.length - 1}
+                  >
+                    <HiOutlineArrowDown />
+                  </button>
+
                   <button
                     type="button"
                     className="mq-icon-btn"

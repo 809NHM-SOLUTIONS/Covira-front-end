@@ -121,6 +121,7 @@
   flex-wrap: wrap;
   gap: 20px;
   align-items: stretch;
+  margin-bottom: 20px;
 }
 
 .analytics-card-row > .analytics-card {
@@ -481,6 +482,15 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.analytics-page-header h1 {
+  margin: 0 0 6px;
+}
+
+.analytics-page-header p {
+  margin: 0;
 }
 
 .analytics-page-header .analytics-secondary-btn {
@@ -641,5 +651,74 @@
 
   .analytics-empty-actions {
     flex-direction: column;
+  }
+}
+.analytics-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.analytics-report-list {
+  display: grid;
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.analytics-report-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid #edf0f7;
+  border-radius: 14px;
+  background: #fafbff;
+}
+
+.analytics-report-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.analytics-report-info strong {
+  color: #1f2a5a;
+  overflow-wrap: anywhere;
+}
+
+.analytics-report-info span {
+  color: #7b8190;
+  font-size: 13px;
+}
+
+.analytics-report-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.analytics-report-actions .analytics-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .analytics-report-list {
+    max-height: none;
+  }
+
+  .analytics-report-actions {
+    width: 100%;
+  }
+
+  .analytics-report-actions .analytics-secondary-btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
