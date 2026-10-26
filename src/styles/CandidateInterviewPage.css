@@ -574,3 +574,65 @@
     animation-duration: 2s;
   }
 }
+/* ===== Read aloud (text-to-speech) ===== */
+.read-aloud-bar {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.read-aloud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #21409a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.read-aloud-btn:hover:not(:disabled) {
+  background: #e0e7ff;
+}
+
+.read-aloud-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.read-aloud-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.read-aloud-status {
+  font-size: 13px;
+  color: #475569;
+}
+
+.read-aloud-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  .read-aloud-bar {
+    gap: 8px;
+  }
+
+  .read-aloud-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

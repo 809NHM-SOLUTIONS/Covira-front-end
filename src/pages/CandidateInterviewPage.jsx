@@ -18,6 +18,10 @@ import {
   HiOutlineArrowRight,
   HiOutlineArrowLeft,
   HiOutlineExclamationCircle,
+  HiOutlineSpeakerWave,
+  HiOutlinePause,
+  HiOutlinePlay,
+  HiOutlineStopCircle,
 } from "react-icons/hi2";
 
 const API_BASE_URL = "http://localhost:8081";
@@ -26,6 +30,52 @@ const isChoiceType = (type) =>
     "multiple choice", "multiple-choice", "multiple_choice",
     "yes/no", "yes / no", "yes-no", "yes_no",
   ].includes(type);
+
+const SPEECH_LANG = "en-US";
+const SPEECH_CHUNK_LENGTH = 180;
+
+/*
+ * Browsers cut off long utterances (Chrome stops after ~15s), so
+ * the text is read as a queue of short, sentence-sized chunks.
+ */
+const splitForSpeech = (text) => {
+  const sentences =
+    String(text || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .match(/[^.!?;:]+[.!?;:]*\s*/g) || [];
+
+  const chunks = [];
+  let current = "";
+
+  const pushCurrent = () => {
+    if (current.trim()) chunks.push(current.trim());
+    current = "";
+  };
+
+  sentences.forEach((sentence) => {
+    if (sentence.length > SPEECH_CHUNK_LENGTH) {
+      pushCurrent();
+      let remaining = sentence;
+      while (remaining.length > SPEECH_CHUNK_LENGTH) {
+        let cut = remaining.lastIndexOf(" ", SPEECH_CHUNK_LENGTH);
+        if (cut <= 0) cut = SPEECH_CHUNK_LENGTH;
+        chunks.push(remaining.slice(0, cut).trim());
+        remaining = remaining.slice(cut);
+      }
+      current = remaining;
+      return;
+    }
+
+    if ((current + sentence).length > SPEECH_CHUNK_LENGTH) {
+      pushCurrent();
+    }
+    current += sentence;
+  });
+
+  pushCurrent();
+  return chunks;
+};
 
 function CandidateInterviewPage() {
   const { token } = useParams();
@@ -425,6 +475,148 @@ const allowMultiple = isMultipleChoice && Boolean(question?.allowMultiple);
   }, [currentQuestion, question, recording]);
 
   // ============================================================
+  // READ ALOUD (TEXT-TO-SPEECH)
+  // ============================================================
+
+  const ttsSupported =
+    typeof window !== "undefined" &&
+    "speechSynthesis" in window &&
+    "SpeechSynthesisUtterance" in window;
+
+  const [autoRead, setAutoRead] = useState(true);
+  // "idle" | "speaking" | "paused"
+  const [speechState, setSpeechState] = useState("idle");
+  const speechRunRef = useRef(0);
+
+  const readAloudActive =
+    candidateRegistered &&
+    !submitted &&
+    !loading &&
+    !error &&
+    Boolean(question);
+
+  const stopSpeech = useCallback(() => {
+    speechRunRef.current += 1;
+
+    if (ttsSupported) {
+      window.speechSynthesis.cancel();
+    }
+
+    setSpeechState("idle");
+  }, [ttsSupported]);
+
+  const speakQuestion = useCallback(
+    (target, number) => {
+      if (!ttsSupported || !target?.questionText) return;
+
+      const synth = window.speechSynthesis;
+      synth.cancel();
+
+      const run = speechRunRef.current + 1;
+      speechRunRef.current = run;
+
+      let text = `Question ${number}. ${target.questionText}`;
+
+      const type = String(target.questionType || "")
+        .trim()
+        .toLowerCase();
+
+      if (
+        isChoiceType(type) &&
+        Array.isArray(target.options) &&
+        target.options.length > 0
+      ) {
+        text += `. Options: ${target.options.join(". ")}`;
+      }
+
+      const chunks = splitForSpeech(text);
+      if (chunks.length === 0) return;
+
+      setSpeechState("speaking");
+
+      chunks.forEach((chunk, index) => {
+        const utterance = new SpeechSynthesisUtterance(chunk);
+        utterance.lang = SPEECH_LANG;
+        utterance.rate = 0.95;
+
+        utterance.onend = () => {
+          if (
+            speechRunRef.current === run &&
+            index === chunks.length - 1
+          ) {
+            setSpeechState("idle");
+          }
+        };
+
+        utterance.onerror = (event) => {
+          if (
+            speechRunRef.current === run &&
+            event.error !== "canceled" &&
+            event.error !== "interrupted"
+          ) {
+            setSpeechState("idle");
+          }
+        };
+
+        synth.speak(utterance);
+      });
+    },
+    [ttsSupported]
+  );
+
+  const pauseSpeech = () => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.pause();
+    setSpeechState("paused");
+  };
+
+  const resumeSpeech = () => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.resume();
+    setSpeechState("speaking");
+  };
+
+  // Read each question when it appears (if auto-read is on).
+  useEffect(() => {
+    if (!ttsSupported || !readAloudActive || !autoRead) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      speakQuestion(question, currentQuestion + 1);
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      // Leaving a question (or the page) silences the old one.
+      window.speechSynthesis.cancel();
+      speechRunRef.current += 1;
+      setSpeechState("idle");
+    };
+  }, [
+    ttsSupported,
+    readAloudActive,
+    autoRead,
+    question,
+    currentQuestion,
+    speakQuestion,
+  ]);
+
+  // Always silence speech when the page is closed, and when
+  // auto-read is off and the candidate moves on.
+  useEffect(() => {
+    stopSpeech();
+  }, [currentQuestion, stopSpeech]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // ============================================================
   // CAMERA
   // ============================================================
 
@@ -746,6 +938,9 @@ const allowMultiple = isMultipleChoice && Boolean(question?.allowMultiple);
     ) {
       return;
     }
+
+    // Don't let the read-aloud voice leak into the recording.
+    stopSpeech();
 
     try {
       setMediaError("");
@@ -1378,8 +1573,8 @@ const handleMultipleChoice = (event) => {
   if (submitted) {
     return (
       <main className="candidate-interview-page">
-        <div className="candidate-interview-error">
-          <HiOutlineCheckCircle />
+        <div className="candidate-interview-error candidate-interview-success">
+          <HiOutlineCheckCircle style={{ color: "#16a34a" }} />
 
           <h1>Interview Submitted</h1>
 
@@ -1648,6 +1843,85 @@ const handleMultipleChoice = (event) => {
           </span>
 
           <h2>{question.questionText}</h2>
+
+          {ttsSupported ? (
+            <div className="read-aloud-bar">
+              {speechState === "idle" && (
+                <button
+                  type="button"
+                  className="read-aloud-btn"
+                  onClick={() =>
+                    speakQuestion(question, currentQuestion + 1)
+                  }
+                  disabled={recording}
+                  title={
+                    recording
+                      ? "Stop recording before listening again"
+                      : "Read this question aloud"
+                  }
+                >
+                  <HiOutlineSpeakerWave />
+                  {autoRead ? "Replay question" : "Read aloud"}
+                </button>
+              )}
+
+              {speechState === "speaking" && (
+                <button
+                  type="button"
+                  className="read-aloud-btn"
+                  onClick={pauseSpeech}
+                >
+                  <HiOutlinePause />
+                  Pause
+                </button>
+              )}
+
+              {speechState === "paused" && (
+                <button
+                  type="button"
+                  className="read-aloud-btn"
+                  onClick={resumeSpeech}
+                >
+                  <HiOutlinePlay />
+                  Resume
+                </button>
+              )}
+
+              {speechState !== "idle" && (
+                <button
+                  type="button"
+                  className="read-aloud-btn"
+                  onClick={stopSpeech}
+                >
+                  <HiOutlineStopCircle />
+                  Stop
+                </button>
+              )}
+
+              <label className="read-aloud-toggle">
+                <input
+                  type="checkbox"
+                  checked={autoRead}
+                  onChange={(event) => setAutoRead(event.target.checked)}
+                />
+                Read questions automatically
+              </label>
+
+              <span
+                className="read-aloud-status"
+                role="status"
+                aria-live="polite"
+              >
+                {speechState === "speaking" && "Reading question..."}
+                {speechState === "paused" && "Paused"}
+              </span>
+            </div>
+          ) : (
+            <p className="read-aloud-note">
+              Read-aloud isn't supported in this browser. You can still
+              read the question on screen.
+            </p>
+          )}
 
           {question.required && (
             <span className="required-question">Required</span>
