@@ -505,90 +505,111 @@ function LandingPage() {
                 </div>
 
             </section>
-            {/* PRICING */}
-           <section id="pricing" className="pricing-section">
+        
+{/* PRICING */}
+<section id="pricing" className="pricing-section">
 
-                <div className="section-header">
+    <div className="section-header">
+        <span>PRICING</span>
 
-                    <span>PRICING</span>
+        <h2>Simple Pricing for Every Business</h2>
 
-                    <h2>
-                        Simple Pricing For Every Business
-                    </h2>
+        <p>
+            Flexible plans to help you create interviews,
+            assess candidates, and simplify recruitment.
+        </p>
+    </div>
 
-                    <p>
-                        Start for free and upgrade as your hiring needs grow.
-                    </p>
+    <div className="pricing-grid">
 
-                </div>
+        {/* STARTER */}
+        <div className="pricing-card">
+            <h3>Starter</h3>
+            <h1>Free</h1>
 
-                <div className="pricing-grid">
+            <p>Perfect for small businesses getting started.</p>
 
-                    <div className="pricing-card">
+            <ul>
+                <li>✔ Up to 10 Assessments</li>
+                <li>✔ Interview Question Management</li>
+                <li>✔ Unique Interview Links</li>
+                <li>✔ Candidate Video Responses</li>
+                <li>✔ Question Read-Aloud</li>
+                <li>✔ Basic Employer Dashboard</li>
+                <li>✔ Basic Interview Review</li>
+            </ul>
 
-                        <h3>Starter</h3>
+            <button
+                className="primary-btn"
+                onClick={() => navigate("/register")}
+            >
+                Get Started Free
+            </button>
+        </div>
 
-                        <h1>Free</h1>
+        {/* BASIC */}
+        <div className="pricing-card">
+            <h3>Basic</h3>
+            <h1>R149<span>/month</span></h1>
 
-                        <p>Perfect for small businesses.</p>
+            <p>For small businesses hiring regularly.</p>
 
-                        <ul>
+            <ul>
+                <li>✔ Up to 30 Assessments per Month</li>
+                <li>✔ Question Management</li>
+                <li>✔ Unique Interview Links</li>
+                <li>✔ Candidate Video Responses</li>
+                <li>✔ Response Timers</li>
+                <li>✔ Candidate Management</li>
+                <li>✔ Interview Reports</li>
+                <li>✔ Email Support</li>
+            </ul>
 
-                            <li>✔ 10 Interviews</li>
+            <button
+                className="primary-btn"
+                onClick={() => navigate("/register")}
+            >
+                Choose Basic
+            </button>
+        </div>
 
-                            <li>✔ Video Responses</li>
+        {/* PROFESSIONAL */}
+        <div className="pricing-card featured">
 
-                            <li>✔ Interview Links</li>
+            <div className="popular-tag">
+                MOST POPULAR
+            </div>
 
-                            <li>✔ Basic Dashboard</li>
+            <h3>Professional</h3>
+            <h1>R299<span>/month</span></h1>
 
-                            <li>✔ Email Support</li>
+            <p>For growing businesses and recruitment teams.</p>
 
-                        </ul>
+            <ul>
+                <li>✔ Unlimited Assessments*</li>
+                <li>✔ Unlimited Candidates*</li>
+                <li>✔ Full Question Management</li>
+                <li>✔ Timed Video Responses</li>
+                <li>✔ Candidate Submission Management</li>
+                <li>✔ Complete Video Interview Review</li>
+                <li>✔ Advanced Dashboard</li>
+                <li>✔ Interview Reports and History</li>
+                <li>✔ Priority Support</li>
+            </ul>
 
-                        <button className="primary-btn" onClick={() => navigate("/register")}>
-                            Get Started Free
-                        </button>
+            <button
+                className="primary-btn"
+                onClick={() => navigate("/register")}
+            >
+                Choose Professional
+            </button>
+        </div>
 
-                    </div>
 
-                    <div className="pricing-card featured">
+    </div>
 
-                        <div className="popular-tag">
-                            MOST POPULAR
-                        </div>
+</section>
 
-                        <h3>Professional</h3>
-
-                        <h1>R299<span>/month</span></h1>
-
-                        <p>Designed for growing businesses.</p>
-
-                        <ul>
-
-                            <li>✔ Unlimited Interviews</li>
-
-                            <li>✔ Unlimited Candidates</li>
-
-                            <li>✔ Analytics Dashboard</li>
-
-                            <li>✔ Candidate Management</li>
-
-                            <li>✔ Priority Support</li>
-
-                            <li>✔ Cloud Storage</li>
-
-                        </ul>
-
-                        <button className="primary-btn">
-                            Choose Plan
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
 
             {/* FAQ */}
             <section className="faq-section">
